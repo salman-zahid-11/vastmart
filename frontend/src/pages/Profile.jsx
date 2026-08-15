@@ -16,7 +16,8 @@ function Profile() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  const avatarUrl = user?.avatar ? `http://localhost:5000${user.avatar}` : null;
+  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+  const avatarUrl = user?.avatar ? `${API_BASE}${user.avatar}` : null;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
