@@ -1,0 +1,68 @@
+.topbar {
+  background: var(--color-ink);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12.5px;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.topbar__ticker {
+  flex: 1;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent);
+}
+
+.topbar__ticker-track {
+  display: flex;
+  gap: 80px;
+  white-space: nowrap;
+  width: max-content;
+  animation: ticker 18s linear infinite;
+  padding-left: var(--space-xl);
+}
+
+.topbar__message {
+  font-weight: 500;
+}
+
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+
+.topbar__contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: var(--space-xl);
+  flex-shrink: 0;
+}
+
+.topbar__contact a {
+  color: rgba(255, 255, 255, 0.85);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.topbar__contact a:hover {
+  color: var(--color-accent);
+}
+
+.topbar__divider {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar__ticker-track {
+    animation: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .topbar__contact span:not(.topbar__divider) {
+    display: none;
+  }
+}

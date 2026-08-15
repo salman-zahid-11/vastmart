@@ -1,0 +1,142 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { getMyProducts } from '../services/productService';
+import { getMySales } from '../services/orderService';
+import './Dashboard.css';
+
+function SellerDashboard() {
+  const [products, setProducts] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [productsData, salesData] = await Promise.all([getMyProducts(), getMySales()]);
+        setProducts(productsData);
+        setSales(salesData);
+      } catch (err) {
+        setError('Failed to load dashboard data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <p className="page-loading">Loading dashboard...</p>;
+  if (error) return <p className="page-error">{error}</p>;
+
+  const totalRevenue = sales.reduce((sum, order) => {
+    const myItemsTotal = order.items.reduce((s, item) => s + item.price * item.quantity, 0);
+    return sum + myItemsTotal;
+  }, 0);
+
+  return (
+    <div className="dashboard">
+      <div className="dashboard__header">
+        <div>
+          <p className="dashboard__eyebrow">Seller Dashboard</p>
+          <h1 className="dashboard__title">Your storefront, at a glance.</h1>
+        </div>
+        <Link to="/seller/products/new" className="dashboard__cta">
+          + Add New Product
+        </Link>
+      </div>
+
+      <div className="dashboard__stats">
+        <StatCard label="Total Products" value={products.length} />
+        <StatCard label="Total Orders" value={sales.length} />
+        <StatCard label="Revenue" value={`৳${totalRevenue.toLocaleString()}`} accent />
+      </div>
+
+      <div className="dashboard__section">
+        <h3>My Products</h3>
+        {products.length === 0 ? (
+          <div className="dashboard__empty">
+            <p>You haven't listed any products yet.</p>
+            <Link to="/seller/products/new">Add your first product →</Link>
+          </div>
+        ) : (
+          <div className="dashboard__table-wrap">
+            <table className="dashboard__table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.map((product) => (
+                  <tr key={product._id}>
+                    <td className="dashboard__table-name">{product.name}</td>
+                    <td className="dashboard__table-mono">৳{product.price}</td>
+                    <td className="dashboard__table-mono">{product.stock}</td>
+                    <td>
+                      {product.isApproved ? (
+                        <span className="pill pill--success">Approved</span>
+                      ) : (
+                        <span className="pill pill--pending">Pending</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="dashboard__section">
+        <h3>Recent Orders</h3>
+        {sales.length === 0 ? (
+          <div className="dashboard__empty">
+            <p>No orders yet — they'll show up here once customers start buying.</p>
+          </div>
+        ) : (
+          <div className="dashboard__table-wrap">
+            <table className="dashboard__table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Date</th>
+                  <th>Status</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sales.map((order) => (
+                  <tr key={order._id}>
+                    <td className="dashboard__table-mono">#{order._id.slice(-8).toUpperCase()}</td>
+                    <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td>
+                      <span className={`pill pill--status-${order.orderStatus}`}>{order.orderStatus}</span>
+                    </td>
+                    <td className="dashboard__table-mono">
+                      ৳{order.items.reduce((s, item) => s + item.price * item.quantity, 0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent }) {
+  return (
+    <div className={`stat-card ${accent ? 'stat-card--accent' : ''}`}>
+      <p className="stat-card__label">{label}</p>
+      <p className="stat-card__value">{value}</p>
+    </div>
+  );
+}
+
+export default SellerDashboard;

@@ -1,0 +1,115 @@
+.add-product {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.add-product__back {
+  font-size: 13.5px;
+  color: var(--color-ink-muted);
+  display: inline-block;
+  margin-bottom: var(--space-lg);
+}
+
+.add-product__back:hover {
+  color: var(--color-primary);
+}
+
+.add-product__title {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.add-product__subtitle {
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.add-product__form {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+}
+
+.add-product__preview {
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.add-product__preview-image {
+  aspect-ratio: 1 / 1;
+  background: var(--color-primary-tint);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.add-product__preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.add-product__preview-image span {
+  font-size: 13px;
+  color: var(--color-ink-faint);
+}
+
+.add-product__fields {
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+}
+
+.add-product__fields textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas);
+  font-size: 14.5px;
+  resize: vertical;
+  transition: border-color var(--duration-fast) var(--ease-out);
+}
+
+.add-product__fields textarea:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.add-product__fields select {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-canvas);
+  font-size: 14.5px;
+}
+
+.add-product__submit {
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 32px;
+  border-radius: var(--radius-pill);
+  margin-top: var(--space-sm);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.add-product__submit:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+@media (max-width: 750px) {
+  .add-product__form {
+    grid-template-columns: 1fr;
+  }
+}

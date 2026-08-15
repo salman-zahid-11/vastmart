@@ -1,0 +1,53 @@
+:root {
+  /* === Colors === */
+  --color-canvas: #FAF8F4;
+  --color-canvas-raised: #FFFFFF;
+  --color-ink: #181330;
+  --color-ink-muted: #6B6478;
+  --color-ink-faint: #A8A2B5;
+
+  --color-primary: #5B3DF5;
+  --color-primary-hover: #4B2FE0;
+  --color-primary-tint: #EFEBFF;
+
+  --color-accent: #FF8A3D;
+  --color-accent-tint: #FFF1E5;
+
+  --color-success: #1FAE6E;
+  --color-success-tint: #E7F8F0;
+
+  --color-danger: #E5484D;
+  --color-danger-tint: #FDECEC;
+
+  --color-border: #E8E4DC;
+  --color-border-strong: #D8D2C6;
+
+  /* === Typography === */
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* === Spacing scale === */
+  --space-xs: 6px;
+  --space-sm: 10px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+  --space-2xl: 64px;
+
+  /* === Radius === */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  /* === Shadow === */
+  --shadow-sm: 0 1px 3px rgba(24, 19, 48, 0.06);
+  --shadow-md: 0 8px 24px rgba(24, 19, 48, 0.08);
+  --shadow-lg: 0 20px 48px rgba(24, 19, 48, 0.12);
+
+  /* === Motion === */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+}

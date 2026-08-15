@@ -1,0 +1,118 @@
+.product-detail {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2xl);
+}
+
+.product-detail__image-wrap {
+  aspect-ratio: 1 / 1;
+  background: var(--color-primary-tint);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.product-detail__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-detail__category {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-sm);
+}
+
+.product-detail__name {
+  font-size: 34px;
+  margin-bottom: var(--space-md);
+}
+
+.product-detail__price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--font-mono);
+  margin-bottom: var(--space-md);
+}
+
+.product-detail__price {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.product-detail__price-strike {
+  font-size: 16px;
+  color: var(--color-ink-faint);
+  text-decoration: line-through;
+}
+
+.product-detail__stock {
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  display: inline-block;
+  margin-bottom: var(--space-lg);
+}
+
+.product-detail__stock.in-stock {
+  color: var(--color-success);
+  background: var(--color-success-tint);
+}
+
+.product-detail__stock.out-stock {
+  color: var(--color-danger);
+  background: var(--color-danger-tint);
+}
+
+.product-detail__description {
+  color: var(--color-ink-muted);
+  line-height: 1.7;
+  margin-bottom: var(--space-lg);
+}
+
+.product-detail__seller {
+  font-size: 14px;
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-lg);
+}
+
+.product-detail__cta {
+  background: var(--color-primary);
+  color: white;
+  font-size: 15.5px;
+  font-weight: 600;
+  padding: 14px 36px;
+  border-radius: var(--radius-pill);
+  transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.product-detail__cta:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+  transform: translateY(-2px);
+}
+
+.product-detail__cta:disabled {
+  background: var(--color-ink-faint);
+  cursor: not-allowed;
+}
+
+.product-detail__feedback {
+  margin-top: var(--space-md);
+  color: var(--color-success);
+  font-weight: 500;
+}
+
+@media (max-width: 800px) {
+  .product-detail {
+    grid-template-columns: 1fr;
+  }
+}

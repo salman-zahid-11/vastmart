@@ -1,0 +1,12 @@
+.page-loading,
+.page-error {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+  font-size: 15px;
+  color: var(--color-ink-muted);
+}
+
+.page-error {
+  color: var(--color-danger);
+}
