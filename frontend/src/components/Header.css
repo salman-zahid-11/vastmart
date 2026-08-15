@@ -223,9 +223,10 @@
 }
 
 @media (max-width: 850px) {
-  .site-header {
+  .site-header__inner {
     flex-wrap: wrap;
     gap: var(--space-sm);
+    padding: 12px var(--space-md);
   }
   .site-header__search {
     order: 3;
@@ -234,5 +235,8 @@
   }
   .site-header__action span {
     display: none;
+  }
+  .site-header__actions {
+    gap: var(--space-md);
   }
 }

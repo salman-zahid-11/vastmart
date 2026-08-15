@@ -98,6 +98,16 @@
   padding: var(--space-xl);
 }
 
+@media (max-width: 600px) {
+  .products-section {
+    padding: var(--space-md);
+  }
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+}
+
 .products-section__header {
   display: flex;
   align-items: baseline;
