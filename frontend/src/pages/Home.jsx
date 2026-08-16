@@ -1,9 +1,3 @@
-import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
-import { getAllProducts } from '../services/productService';
-import './Header.css';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getAllProducts } from '../services/productService';
@@ -24,7 +18,6 @@ function Home() {
   const [sort, setSort] = useState('');
 
   useEffect(() => {
-    // If URL has a category-like search term, pre-fill the category filter
     setFilters((prev) => ({ ...prev, category: '' }));
   }, [searchQuery]);
 
