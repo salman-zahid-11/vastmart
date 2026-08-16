@@ -1,0 +1,110 @@
+.filter-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  align-self: start;
+  position: sticky;
+  top: 90px;
+}
+
+.filter-sidebar__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.filter-sidebar__header h3 {
+  font-size: 16px;
+}
+
+.filter-sidebar__clear {
+  font-size: 12.5px;
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.filter-sidebar__group {
+  padding: var(--space-md) 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.filter-sidebar__group:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+.filter-sidebar__group h4 {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: var(--space-sm);
+}
+
+.filter-sidebar__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.filter-sidebar__checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--color-ink);
+  cursor: pointer;
+}
+
+.filter-sidebar__checkbox input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--color-primary);
+}
+
+.filter-sidebar__empty {
+  font-size: 13px;
+  color: var(--color-ink-faint);
+}
+
+.filter-sidebar__price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-sm);
+}
+
+.filter-sidebar__price-row input {
+  width: 0;
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  background: var(--color-canvas);
+}
+
+.filter-sidebar__apply {
+  width: 100%;
+  background: var(--color-ink);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px;
+  border-radius: var(--radius-sm);
+}
+
+@media (max-width: 900px) {
+  .filter-sidebar {
+    width: 100%;
+    position: static;
+  }
+}

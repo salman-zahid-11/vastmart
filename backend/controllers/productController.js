@@ -46,9 +46,46 @@ const createProduct = async (req, res) => {
 // @route  GET /api/products
 const getProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isApproved: true, isActive: true })
+    const { search, category, minPrice, maxPrice, sort, brand } = req.query;
+
+    const filter = { isApproved: true, isActive: true };
+
+    // Text search across name, description, and tags
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    // Category filter (exact match, case-insensitive)
+    if (category) {
+      filter.category = { $regex: `^${category}$`, $options: 'i' };
+    }
+
+    // Brand filter
+    if (brand) {
+      filter.brand = { $regex: `^${brand}$`, $options: 'i' };
+    }
+
+    // Price range filter
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = Number(minPrice);
+      if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    // Sorting
+    let sortOption = { createdAt: -1 }; // default: newest first
+    if (sort === 'price_asc') sortOption = { price: 1 };
+    if (sort === 'price_desc') sortOption = { price: -1 };
+    if (sort === 'name_asc') sortOption = { name: 1 };
+    if (sort === 'rating') sortOption = { ratingsAverage: -1 };
+
+    const products = await Product.find(filter)
       .populate('seller', 'name email')
-      .sort({ createdAt: -1 });
+      .sort(sortOption);
 
     res.status(200).json(products);
   } catch (error) {
@@ -56,6 +93,20 @@ const getProducts = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+
+// @desc   Get list of distinct categories (for filter UI)
+// @route  GET /api/products/categories
+const getCategories = async (req, res) => {
+  try {
+    const categories = await Product.distinct('category', { isApproved: true, isActive: true });
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
 
 // @desc   Get a single product by ID
 // @route  GET /api/products/:id
@@ -125,4 +176,4 @@ const approveProduct = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct };
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories };
