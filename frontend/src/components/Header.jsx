@@ -179,8 +179,11 @@ function Header() {
                   <p className="site-header__dropdown-email">{user.email}</p>
                   <hr />
                   <Link to="/profile" onClick={() => setMenuOpen(false)}>My Profile</Link>
-                  <Link to="/orders" onClick={() => setMenuOpen(false)}>My Orders</Link>
-                  {user.role === 'seller' && (
+<Link to="/orders" onClick={() => setMenuOpen(false)}>My Orders</Link>
+{user.role === 'customer' && (
+  <Link to="/become-seller" onClick={() => setMenuOpen(false)}>Become a Seller</Link>
+)}
+{user.role === 'seller' && (
                     <Link to="/seller/dashboard" onClick={() => setMenuOpen(false)}>Seller Dashboard</Link>
                   )}
                   {user.role === 'admin' && (

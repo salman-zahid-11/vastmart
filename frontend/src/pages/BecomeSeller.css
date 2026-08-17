@@ -1,0 +1,86 @@
+.become-seller {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: var(--space-xl);
+}
+
+.become-seller__title {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.become-seller__subtitle {
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-lg);
+}
+
+.become-seller__submit {
+  width: 100%;
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 14px;
+  border-radius: var(--radius-pill);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.become-seller__submit:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.become-seller__submit:disabled {
+  background: var(--color-ink-faint);
+  cursor: not-allowed;
+}
+
+.become-seller--status {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-2xl);
+}
+
+.status-card {
+  max-width: 460px;
+  text-align: center;
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2xl);
+}
+
+.status-card__icon {
+  font-size: 40px;
+  display: block;
+  margin-bottom: var(--space-md);
+}
+
+.status-card h2 {
+  font-size: 22px;
+  margin-bottom: var(--space-sm);
+}
+
+.status-card p {
+  color: var(--color-ink-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.status-card__details {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.status-card--rejected .status-card__icon {
+  color: var(--color-danger);
+}
+
+.status-card__retry {
+  margin-top: var(--space-md);
+  background: var(--color-primary);
+  color: white;
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: var(--radius-pill);
+}

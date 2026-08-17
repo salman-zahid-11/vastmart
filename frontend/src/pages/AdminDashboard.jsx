@@ -10,8 +10,21 @@ import {
 } from '../services/adminService';
 import './AdminDashboard.css';
 
+import {
+  getDashboardStats,
+  getAllProductsAdmin,
+  approveProduct,
+  getAllUsers,
+  updateUserStatus,
+  getAllOrdersAdmin,
+  getActivityLog,
+} from '../services/adminService';
+import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
+
+
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'applications', label: 'Seller Applications' },
   { id: 'users', label: 'Users' },
   { id: 'products', label: 'Products' },
   { id: 'orders', label: 'Orders' },
@@ -26,6 +39,7 @@ function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [activity, setActivity] = useState([]);
+  const [applications, setApplications] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,21 +48,23 @@ function AdminDashboard() {
     fetchAll();
   }, []);
 
-  const fetchAll = async () => {
+const fetchAll = async () => {
     setLoading(true);
     try {
-      const [statsData, productsData, usersData, ordersData, activityData] = await Promise.all([
+      const [statsData, productsData, usersData, ordersData, activityData, applicationsData] = await Promise.all([
         getDashboardStats(),
         getAllProductsAdmin(),
         getAllUsers(),
         getAllOrdersAdmin(),
         getActivityLog(),
+        getAllApplications(),
       ]);
       setStats(statsData);
       setProducts(productsData);
       setUsers(usersData);
       setOrders(ordersData);
       setActivity(activityData);
+      setApplications(applicationsData);
     } catch (err) {
       setError('Failed to load admin data');
     } finally {
@@ -81,6 +97,9 @@ function AdminDashboard() {
 
       <main className="admin-content">
         {activeSection === 'overview' && <OverviewSection stats={stats} />}
+        {activeSection === 'applications' && (
+          <ApplicationsSection applications={applications} setApplications={setApplications} refreshAll={fetchAll} />
+        )}
         {activeSection === 'users' && <UsersSection users={users} setUsers={setUsers} />}
         {activeSection === 'products' && (
           <ProductsSection products={products} setProducts={setProducts} refreshStats={fetchAll} />
@@ -205,6 +224,157 @@ function UsersSection({ users, setUsers }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+
+/* ===== Seller Applications ===== */
+function ApplicationsSection({ applications, setApplications, refreshAll }) {
+  const [filter, setFilter] = useState('pending');
+  const [reviewingId, setReviewingId] = useState(null);
+  const [rejectingId, setRejectingId] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+
+  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
+  const handleApprove = async (id) => {
+    setReviewingId(id);
+    try {
+      await reviewApplication(id, 'approved');
+      await refreshAll();
+    } catch (err) {
+      console.error('Failed to approve application', err);
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const handleReject = async (id) => {
+    if (!rejectionReason.trim()) return;
+    setReviewingId(id);
+    try {
+      await reviewApplication(id, 'rejected', rejectionReason);
+      await refreshAll();
+      setRejectingId(null);
+      setRejectionReason('');
+    } catch (err) {
+      console.error('Failed to reject application', err);
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const pendingCount = applications.filter((a) => a.status === 'pending').length;
+  const visible = filter === 'all' ? applications : applications.filter((a) => a.status === filter);
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Seller Applications</h2>
+        <div className="admin-tabs">
+          <button className={`admin-tab ${filter === 'pending' ? 'admin-tab--active' : ''}`} onClick={() => setFilter('pending')}>
+            Pending ({pendingCount})
+          </button>
+          <button className={`admin-tab ${filter === 'approved' ? 'admin-tab--active' : ''}`} onClick={() => setFilter('approved')}>
+            Approved
+          </button>
+          <button className={`admin-tab ${filter === 'rejected' ? 'admin-tab--active' : ''}`} onClick={() => setFilter('rejected')}>
+            Rejected
+          </button>
+        </div>
+      </div>
+
+      {visible.length === 0 ? (
+        <div className="dashboard__empty"><p>No applications here.</p></div>
+      ) : (
+        <div className="applications-list">
+          {visible.map((app) => {
+            const isReviewing = reviewingId === app._id;
+            return (
+              <div key={app._id} className="application-card" style={{ opacity: isReviewing ? 0.5 : 1 }}>
+                <div className="application-card__header">
+                  <div>
+                    <h4>{app.businessName}</h4>
+                    <p className="application-card__meta">
+                      {app.user?.name} · {app.user?.email} · Applied {new Date(app.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className={`pill pill--${app.status === 'approved' ? 'success' : app.status === 'rejected' ? 'danger' : 'pending'}`}>
+                    {app.status}
+                  </span>
+                </div>
+
+                <div className="application-card__body">
+                  <div className="application-card__field">
+                    <span>Business Type</span>
+                    <p>{app.businessType}</p>
+                  </div>
+                  <div className="application-card__field">
+                    <span>Address</span>
+                    <p>{app.businessAddress}</p>
+                  </div>
+                  <div className="application-card__field">
+                    <span>NID Number</span>
+                    <p>{app.nidNumber}</p>
+                  </div>
+                  {app.tradeLicenseNumber && (
+                    <div className="application-card__field">
+                      <span>Trade License</span>
+                      <p>{app.tradeLicenseNumber}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="application-card__documents">
+                  <a href={`${API_BASE}${app.nidDocument}`} target="_blank" rel="noreferrer" className="application-card__doc-link">
+                    📄 View NID Document
+                  </a>
+                  {app.tradeLicenseDocument && (
+                    <a href={`${API_BASE}${app.tradeLicenseDocument}`} target="_blank" rel="noreferrer" className="application-card__doc-link">
+                      📄 View Trade License
+                    </a>
+                  )}
+                </div>
+
+                {app.status === 'rejected' && app.rejectionReason && (
+                  <p className="application-card__rejection">Rejected: {app.rejectionReason}</p>
+                )}
+
+                {app.status === 'pending' && (
+                  <div className="application-card__actions">
+                    {rejectingId === app._id ? (
+                      <div className="application-card__reject-form">
+                        <input
+                          type="text"
+                          placeholder="Reason for rejection..."
+                          value={rejectionReason}
+                          onChange={(e) => setRejectionReason(e.target.value)}
+                        />
+                        <button onClick={() => handleReject(app._id)} disabled={isReviewing} className="dashboard__action-btn dashboard__action-btn--danger">
+                          Confirm Reject
+                        </button>
+                        <button onClick={() => { setRejectingId(null); setRejectionReason(''); }} className="dashboard__action-btn">
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button onClick={() => handleApprove(app._id)} disabled={isReviewing} className="dashboard__action-btn dashboard__action-btn--success">
+                          Approve
+                        </button>
+                        <button onClick={() => setRejectingId(app._id)} disabled={isReviewing} className="dashboard__action-btn dashboard__action-btn--danger">
+                          Reject
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

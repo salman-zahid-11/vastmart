@@ -15,6 +15,7 @@ import AddProduct from './pages/AddProduct';
 import AdminDashboard from './pages/AdminDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
+import BecomeSeller from './pages/BecomeSeller';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/become-seller" element={<BecomeSeller />} />
       </Routes>
     </div>
   );
