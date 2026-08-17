@@ -23,7 +23,14 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max per file
 });
 
+// For seller applications — accepts two named document fields
+const uploadSellerDocs = upload.fields([
+  { name: 'nidDocument', maxCount: 1 },
+  { name: 'tradeLicenseDocument', maxCount: 1 },
+]);
+
 module.exports = upload;
+module.exports.uploadSellerDocs = uploadSellerDocs;

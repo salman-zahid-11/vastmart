@@ -3,6 +3,7 @@ import './BannerCarousel.css';
 import heroImage from '../assets/hero.png';
 import cartImage from '../assets/banners/cartpic.jpg';
 import pic from '../assets/banners/pic_1.png';
+import fan from '../assets/banners/turbofan.png';
 
 const SLIDES = [
   {
@@ -30,6 +31,11 @@ const SLIDES = [
     image: pic,
     fullImage: true,
     
+  },
+    
+  {
+    image: turbofan,
+    fullImage: true,
   },
 ];
 
