@@ -34,7 +34,7 @@ const SLIDES = [
   },
     
   {
-    image: turbofan,
+    image: fan,
     fullImage: true,
   },
 ];
