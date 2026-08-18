@@ -50,6 +50,24 @@ function ProductDetail() {
     }
   };
 
+    const handleBuyNow = async () => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setAdding(true);
+    setMessage('');
+    try {
+      await addItem(product._id, 1);
+      navigate('/checkout');
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to proceed to checkout');
+      setAdding(false);
+    }
+  };
+
+
   if (loading) return <p className="page-loading">Loading...</p>;
   if (error) return <p className="page-error">{error}</p>;
   if (!product) return null;
@@ -85,13 +103,23 @@ function ProductDetail() {
 
         <p className="product-detail__seller">Sold by <strong>{product.seller?.name || 'Unknown Seller'}</strong></p>
 
-        <button
-          onClick={handleAddToCart}
-          disabled={product.stock === 0 || adding}
-          className="product-detail__cta"
-        >
-          {adding ? 'Adding...' : 'Add to Cart'}
-        </button>
+                <div className="product-detail__cta-row">
+          <button
+            onClick={handleAddToCart}
+            disabled={product.stock === 0 || adding}
+            className="product-detail__cta product-detail__cta--secondary"
+          >
+            {adding ? 'Adding...' : 'Add to Cart'}
+          </button>
+
+          <button
+            onClick={handleBuyNow}
+            disabled={product.stock === 0 || adding}
+            className="product-detail__cta"
+          >
+            Place Order
+          </button>
+        </div>
 
         {message && <p className="product-detail__feedback">{message}</p>}
       </div>

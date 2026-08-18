@@ -85,6 +85,11 @@
   margin-bottom: var(--space-lg);
 }
 
+.product-detail__cta-row {
+  display: flex;
+  gap: var(--space-md);
+}
+
 .product-detail__cta {
   background: var(--color-primary);
   color: white;
@@ -93,6 +98,17 @@
   padding: 14px 36px;
   border-radius: var(--radius-pill);
   transition: background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
+}
+
+.product-detail__cta--secondary {
+  background: var(--color-canvas-raised);
+  color: var(--color-ink);
+  border: 1.5px solid var(--color-border-strong);
+}
+
+.product-detail__cta--secondary:hover:not(:disabled) {
+  background: var(--color-canvas);
+  border-color: var(--color-primary);
 }
 
 .product-detail__cta:hover:not(:disabled) {
