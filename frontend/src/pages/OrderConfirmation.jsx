@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getOrderById } from '../services/orderService';
 import { generateReceiptPDF } from '../utils/generateReceipt';
+import OrderStatusTracker from '../components/OrderStatusTracker';
 import './OrderConfirmation.css';
 
 function OrderConfirmation() {
@@ -83,14 +84,11 @@ function OrderConfirmation() {
 
         <div className="confirmation-side">
           <div className="confirmation-card">
-            <h3>Status</h3>
-            <div className="confirmation-status">
-              <span className="confirmation-status__dot"></span>
-              <span className="confirmation-status__label">{order.orderStatus}</span>
-            </div>
-            <p className="confirmation-meta">Payment: {order.paymentMethod.replace('_', ' ').toUpperCase()}</p>
-            <p className="confirmation-meta">Payment status: {order.paymentStatus}</p>
-          </div>
+  <h3>Order Status</h3>
+  <OrderStatusTracker status={order.orderStatus} />
+  <p className="confirmation-meta">Payment: {order.paymentMethod.replace('_', ' ').toUpperCase()}</p>
+  <p className="confirmation-meta">Payment status: {order.paymentStatus}</p>
+</div>
 
           <div className="confirmation-card">
             <h3>Contact</h3>

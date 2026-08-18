@@ -140,4 +140,43 @@ const getMySales = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getOrderById, getMySales };
+// @desc   Update order status (admin only)
+// @route  PUT /api/orders/:id/status
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { orderStatus } = req.body;
+    const validStatuses = ['placed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
+    if (!validStatuses.includes(orderStatus)) {
+      return res.status(400).json({ message: 'Invalid status value' });
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    order.orderStatus = orderStatus;
+
+    // Mark payment as paid automatically once delivered (for COD orders)
+    if (orderStatus === 'delivered' && order.paymentStatus === 'pending') {
+      order.paymentStatus = 'paid';
+    }
+
+    await order.save();
+
+    await logActivity({
+      user: req.user,
+      action: 'order_placed', // reused enum — see note below
+      description: `Admin updated order #${order._id.toString().slice(-8).toUpperCase()} to "${orderStatus}"`,
+      meta: { orderId: order._id },
+    });
+
+    res.status(200).json(order);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { createOrder, getMyOrders, getOrderById, getMySales, getAllOrdersAdmin, updateOrderStatus };

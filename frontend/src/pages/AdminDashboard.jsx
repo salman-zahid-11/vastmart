@@ -9,6 +9,7 @@ import {
   getActivityLog,
 } from '../services/adminService';
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
+import { updateOrderStatus } from '../services/adminService';
 import './AdminDashboard.css';
 
 
@@ -94,7 +95,7 @@ const fetchAll = async () => {
         {activeSection === 'products' && (
           <ProductsSection products={products} setProducts={setProducts} refreshStats={fetchAll} />
         )}
-        {activeSection === 'orders' && <OrdersSection orders={orders} />}
+        {activeSection === 'orders' && <OrdersSection orders={orders} setOrders={setOrders} />}
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
       </main>
     </div>
@@ -455,8 +456,25 @@ function ProductsSection({ products, setProducts, refreshStats }) {
   );
 }
 
+
 /* ===== Orders ===== */
-function OrdersSection({ orders }) {
+function OrdersSection({ orders, setOrders }) {
+  const [updatingId, setUpdatingId] = useState(null);
+
+  const STATUS_OPTIONS = ['placed', 'processing', 'shipped', 'delivered', 'cancelled'];
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    setUpdatingId(orderId);
+    try {
+      const updated = await updateOrderStatus(orderId, newStatus);
+      setOrders((prev) => prev.map((o) => (o._id === orderId ? updated : o)));
+    } catch (err) {
+      console.error('Failed to update order status', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   return (
     <div>
       <h2 className="admin-content__title">All Orders</h2>
@@ -470,19 +488,37 @@ function OrdersSection({ orders }) {
               <th>Status</th>
               <th>Payment</th>
               <th>Amount</th>
+              <th>Update Status</th>
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
-              <tr key={order._id}>
-                <td className="admin-table__mono">#{order._id.slice(-8).toUpperCase()}</td>
-                <td>{order.user?.name || 'Unknown'}</td>
-                <td>{new Date(order.createdAt).toLocaleDateString()}</td>
-                <td><span className={`pill pill--status-${order.orderStatus}`}>{order.orderStatus}</span></td>
-                <td>{order.paymentMethod.replace('_', ' ')}</td>
-                <td className="admin-table__mono">৳{order.totalAmount}</td>
-              </tr>
-            ))}
+            {orders.map((order) => {
+              const isUpdating = updatingId === order._id;
+              return (
+                <tr key={order._id} style={{ opacity: isUpdating ? 0.5 : 1 }}>
+                  <td className="admin-table__mono">#{order._id.slice(-8).toUpperCase()}</td>
+                  <td>{order.user?.name || 'Unknown'}</td>
+                  <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                  <td><span className={`pill pill--status-${order.orderStatus}`}>{order.orderStatus}</span></td>
+                  <td>{order.paymentMethod.replace('_', ' ')}</td>
+                  <td className="admin-table__mono">৳{order.totalAmount}</td>
+                  <td>
+                    <select
+                      value={order.orderStatus}
+                      disabled={isUpdating}
+                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                      className="admin-table__status-select"
+                    >
+                      {STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
