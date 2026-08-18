@@ -8,18 +8,8 @@ import {
   getAllOrdersAdmin,
   getActivityLog,
 } from '../services/adminService';
-import './AdminDashboard.css';
-
-import {
-  getDashboardStats,
-  getAllProductsAdmin,
-  approveProduct,
-  getAllUsers,
-  updateUserStatus,
-  getAllOrdersAdmin,
-  getActivityLog,
-} from '../services/adminService';
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
+import './AdminDashboard.css';
 
 
 const SECTIONS = [
