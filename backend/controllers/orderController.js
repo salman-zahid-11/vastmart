@@ -179,4 +179,4 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getOrderById, getMySales, getAllOrdersAdmin, updateOrderStatus };
+module.exports = { createOrder, getMyOrders, getOrderById, getMySales, updateOrderStatus };

@@ -31,7 +31,7 @@ const submitApplication = async (req, res) => {
       businessType,
       businessAddress,
       nidNumber,
-      nidDocument: `/uploads/${req.files.nidDocument[0].filename}`,
+      nidDocument: req.files.nidDocument[0].path,
       tradeLicenseNumber,
       additionalNotes,
       status: 'pending',
@@ -40,8 +40,8 @@ const submitApplication = async (req, res) => {
       reviewedAt: null,
     };
 
-    if (req.files?.tradeLicenseDocument) {
-      applicationData.tradeLicenseDocument = `/uploads/${req.files.tradeLicenseDocument[0].filename}`;
+        if (req.files?.tradeLicenseDocument) {
+      applicationData.tradeLicenseDocument = req.files.tradeLicenseDocument[0].path;
     }
 
     let application;
