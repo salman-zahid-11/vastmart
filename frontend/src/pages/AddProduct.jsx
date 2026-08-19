@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { createProduct } from '../services/productService';
 import './AddProduct.css';
 
+const MAX_IMAGES = 5;
+
 function AddProduct() {
   const navigate = useNavigate();
 
@@ -15,8 +17,9 @@ function AddProduct() {
     brand: '',
     stock: '',
     productType: 'physical',
-    imageUrl: '',
   });
+  const [images, setImages] = useState([]); // File objects
+  const [previews, setPreviews] = useState([]); // object URLs
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -24,25 +27,43 @@ function AddProduct() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const combined = [...images, ...files].slice(0, MAX_IMAGES);
+    setImages(combined);
+    setPreviews(combined.map((file) => URL.createObjectURL(file)));
+    e.target.value = ''; // allow re-selecting the same file if removed
+  };
+
+  const handleRemoveImage = (index) => {
+    const newImages = images.filter((_, i) => i !== index);
+    setImages(newImages);
+    setPreviews(newImages.map((file) => URL.createObjectURL(file)));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (images.length === 0) {
+      setError('Please add at least one product image');
+      return;
+    }
+
     setLoading(true);
-
     try {
-      const payload = {
-        name: formData.name,
-        description: formData.description,
-        price: Number(formData.price),
-        category: formData.category,
-        subCategory: formData.subCategory,
-        brand: formData.brand,
-        stock: Number(formData.stock),
-        productType: formData.productType,
-        images: formData.imageUrl ? [formData.imageUrl] : [],
-      };
+      const data = new FormData();
+      data.append('name', formData.name);
+      data.append('description', formData.description);
+      data.append('price', formData.price);
+      data.append('category', formData.category);
+      data.append('subCategory', formData.subCategory);
+      data.append('brand', formData.brand);
+      data.append('stock', formData.stock);
+      data.append('productType', formData.productType);
+      images.forEach((file) => data.append('images', file));
 
-      await createProduct(payload);
+      await createProduct(data);
       navigate('/seller/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create product');
@@ -61,17 +82,32 @@ function AddProduct() {
 
       <form onSubmit={handleSubmit} className="add-product__form">
         <div className="add-product__preview">
-          <div className="add-product__preview-image">
-            {formData.imageUrl ? (
-              <img src={formData.imageUrl} alt="Preview" />
-            ) : (
-              <span>Image preview</span>
+          <div className="add-product__image-grid">
+            {previews.map((src, i) => (
+              <div key={i} className="add-product__image-slot add-product__image-slot--filled">
+                <img src={src} alt={`Preview ${i + 1}`} />
+                <button type="button" onClick={() => handleRemoveImage(i)} className="add-product__image-remove">×</button>
+                {i === 0 && <span className="add-product__image-main-badge">Main</span>}
+              </div>
+            ))}
+
+            {images.length < MAX_IMAGES && (
+              <label className="add-product__image-slot add-product__image-slot--add">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  onChange={handleImageSelect}
+                  style={{ display: 'none' }}
+                />
+                <span>+</span>
+                <span className="add-product__image-add-label">Add photo</span>
+              </label>
             )}
           </div>
-          <div className="checkout-form__field">
-            <label>Image URL</label>
-            <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="https://..." />
-          </div>
+          <p className="add-product__image-hint">
+            {images.length} / {MAX_IMAGES} images · First photo is the main image
+          </p>
         </div>
 
         <div className="add-product__fields">

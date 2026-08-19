@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getProductById } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import ImageGallery from '../components/ImageGallery';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -75,14 +76,8 @@ function ProductDetail() {
   const hasDiscount = Boolean(product.discountPrice);
 
   return (
-    <div className="product-detail">
-      <div className="product-detail__image-wrap">
-        <img
-          src={product.images?.[0] || 'https://via.placeholder.com/500'}
-          alt={product.name}
-          className="product-detail__image"
-        />
-      </div>
+        <div className="product-detail">
+      <ImageGallery images={product.images} />
 
       <div className="product-detail__info">
         <p className="product-detail__category">

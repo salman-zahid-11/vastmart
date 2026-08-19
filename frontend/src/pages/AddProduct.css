@@ -39,26 +39,86 @@
   padding: var(--space-lg);
 }
 
-.add-product__preview-image {
+.add-product__image-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: var(--space-sm);
+}
+
+.add-product__image-slot {
+  position: relative;
   aspect-ratio: 1 / 1;
-  background: var(--color-primary-tint);
   border-radius: var(--radius-sm);
-  margin-bottom: var(--space-md);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.add-product__preview-image img {
+.add-product__image-slot--filled img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.add-product__preview-image span {
-  font-size: 13px;
+.add-product__image-slot--add {
+  background: var(--color-canvas);
+  border: 1.5px dashed var(--color-border-strong);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
   color: var(--color-ink-faint);
+  transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.add-product__image-slot--add:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.add-product__image-slot--add span:first-child {
+  font-size: 26px;
+  font-weight: 300;
+}
+
+.add-product__image-add-label {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.add-product__image-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(24, 19, 48, 0.7);
+  color: white;
+  font-size: 14px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-product__image-main-badge {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: var(--color-primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.add-product__image-hint {
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  text-align: center;
 }
 
 .add-product__fields {
