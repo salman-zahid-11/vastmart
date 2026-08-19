@@ -16,6 +16,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import BecomeSeller from './pages/BecomeSeller';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/become-seller" element={<BecomeSeller />} />
       </Routes>
+      <Footer />
     </div>
   );
 }
