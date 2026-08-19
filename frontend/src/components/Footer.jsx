@@ -17,10 +17,10 @@ function Footer() {
               one seamless storefront.
             </p>
             <div className="site-footer__social">
-              <a href="#" aria-label="Facebook" className="site-footer__social-icon">
+              <a href="https://www.facebook.com/vastmartbd" aria-label="Facebook" className="site-footer__social-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9v-2.9h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.45h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34v6.99A10 10 0 0 0 22 12z"/></svg>
               </a>
-              <a href="#" aria-label="Instagram" className="site-footer__social-icon">
+              <a href="https://www.instagram.com/vastmartbd" aria-label="Instagram" className="site-footer__social-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
               </a>
               <a href="#" aria-label="YouTube" className="site-footer__social-icon">
