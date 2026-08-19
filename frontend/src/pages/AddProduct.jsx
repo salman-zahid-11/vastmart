@@ -19,7 +19,8 @@ function AddProduct() {
     productType: 'physical',
   });
   const [images, setImages] = useState([]); // File objects
-  const [previews, setPreviews] = useState([]); // object URLs
+  const [previews, setPreviews] = useState([]);
+    const [imageUrls, setImageUrls] = useState(['']);  // object URLs
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -63,6 +64,11 @@ function AddProduct() {
       data.append('productType', formData.productType);
       images.forEach((file) => data.append('images', file));
 
+      const validUrls = imageUrls.map((u) => u.trim()).filter(Boolean);
+      if (validUrls.length > 0) {
+        data.append('imageUrls', JSON.stringify(validUrls));
+      }
+
       await createProduct(data);
       navigate('/seller/dashboard');
     } catch (err) {
@@ -105,9 +111,36 @@ function AddProduct() {
               </label>
             )}
           </div>
-          <p className="add-product__image-hint">
+                   <p className="add-product__image-hint">
             {images.length} / {MAX_IMAGES} images · First photo is the main image
           </p>
+
+          <div className="add-product__url-section">
+            <p className="add-product__url-label">Or paste image URLs instead</p>
+            {imageUrls.map((url, i) => (
+              <input
+                key={i}
+                type="text"
+                value={url}
+                onChange={(e) => {
+                  const newUrls = [...imageUrls];
+                  newUrls[i] = e.target.value;
+                  setImageUrls(newUrls);
+                }}
+                placeholder="https://example.com/photo.jpg"
+                className="add-product__url-input"
+              />
+            ))}
+            {imageUrls.length < MAX_IMAGES && (
+              <button
+                type="button"
+                onClick={() => setImageUrls([...imageUrls, ''])}
+                className="add-product__url-add"
+              >
+                + Add another URL
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="add-product__fields">

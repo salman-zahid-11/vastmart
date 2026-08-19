@@ -6,16 +6,27 @@ const logActivity = require('../utils/logActivity');
 // @access Private (seller/admin only)
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, productType, brand, subCategory, tags } = req.body;
+    const { name, description, price, category, stock, productType, brand, subCategory, tags, imageUrls } = req.body;
 
     if (!name || !description || !price || !category || stock === undefined) {
       return res.status(400).json({ message: 'Please fill all required fields' });
     }
 
-    // Uploaded files take priority; fall back to nothing if none provided
     let images = [];
+
     if (req.files && req.files.length > 0) {
       images = req.files.map((file) => `/uploads/${file.filename}`);
+    }
+
+    if (imageUrls) {
+      try {
+        const parsedUrls = JSON.parse(imageUrls);
+        if (Array.isArray(parsedUrls)) {
+          images = [...images, ...parsedUrls];
+        }
+      } catch (e) {
+        // ignore malformed imageUrls, don't break the whole request
+      }
     }
 
     const product = await Product.create({
