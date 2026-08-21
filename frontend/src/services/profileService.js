@@ -21,3 +21,4 @@ export const updateProduct = async (id, formData) => {
   });
   return response.data;
 };
+
