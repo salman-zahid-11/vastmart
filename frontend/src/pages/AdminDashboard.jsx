@@ -10,11 +10,13 @@ import {
 } from '../services/adminService';
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
 import { updateOrderStatus } from '../services/adminService';
+import { getAllNotices, createNotice, toggleNotice, deleteNotice } from '../services/noticeService';
 import './AdminDashboard.css';
 
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'notices', label: 'Notices' },
   { id: 'applications', label: 'Seller Applications' },
   { id: 'users', label: 'Users' },
   { id: 'products', label: 'Products' },
@@ -31,6 +33,7 @@ function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [activity, setActivity] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [notices, setNotices] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,16 +42,17 @@ function AdminDashboard() {
     fetchAll();
   }, []);
 
-const fetchAll = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const [statsData, productsData, usersData, ordersData, activityData, applicationsData] = await Promise.all([
+      const [statsData, productsData, usersData, ordersData, activityData, applicationsData, noticesData] = await Promise.all([
         getDashboardStats(),
         getAllProductsAdmin(),
         getAllUsers(),
         getAllOrdersAdmin(),
         getActivityLog(),
         getAllApplications(),
+        getAllNotices(),
       ]);
       setStats(statsData);
       setProducts(productsData);
@@ -56,6 +60,7 @@ const fetchAll = async () => {
       setOrders(ordersData);
       setActivity(activityData);
       setApplications(applicationsData);
+      setNotices(noticesData);
     } catch (err) {
       setError('Failed to load admin data');
     } finally {
@@ -88,6 +93,7 @@ const fetchAll = async () => {
 
       <main className="admin-content">
         {activeSection === 'overview' && <OverviewSection stats={stats} />}
+        {activeSection === 'notices' && <NoticesSection notices={notices} setNotices={setNotices} />}
         {activeSection === 'applications' && (
           <ApplicationsSection applications={applications} setApplications={setApplications} refreshAll={fetchAll} />
         )}
@@ -119,6 +125,8 @@ function OverviewSection({ stats }) {
   );
 }
 
+
+
 function StatCard({ label, value, accent, warn }) {
   return (
     <div className={`stat-card ${accent ? 'stat-card--accent' : ''} ${warn ? 'stat-card--warn' : ''}`}>
@@ -127,6 +135,110 @@ function StatCard({ label, value, accent, warn }) {
     </div>
   );
 }
+
+
+/* ===== Notices ===== */
+function NoticesSection({ notices, setNotices }) {
+  const [newMessage, setNewMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const created = await createNotice(newMessage.trim());
+      setNotices([created, ...notices]);
+      setNewMessage('');
+    } catch (err) {
+      console.error('Failed to create notice', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggle = async (id) => {
+    setBusyId(id);
+    try {
+      const updated = await toggleNotice(id);
+      setNotices(notices.map((n) => (n._id === id ? updated : n)));
+    } catch (err) {
+      console.error('Failed to toggle notice', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setBusyId(id);
+    try {
+      await deleteNotice(id);
+      setNotices(notices.filter((n) => n._id !== id));
+    } catch (err) {
+      console.error('Failed to delete notice', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="admin-content__title">Notice Banner</h2>
+      <p className="admin-content__subtitle">
+        Active notices scroll across the top of every page on the site.
+      </p>
+
+      <form onSubmit={handleCreate} className="notice-form">
+        <input
+          type="text"
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="e.g. Eid Sale! 20% off everything this week."
+        />
+        <button type="submit" disabled={submitting || !newMessage.trim()} className="dashboard__cta">
+          {submitting ? 'Adding...' : 'Add Notice'}
+        </button>
+      </form>
+
+      {notices.length === 0 ? (
+        <div className="dashboard__empty"><p>No notices yet.</p></div>
+      ) : (
+        <div className="notice-list">
+          {notices.map((notice) => {
+            const isBusy = busyId === notice._id;
+            return (
+              <div key={notice._id} className="notice-item" style={{ opacity: isBusy ? 0.5 : 1 }}>
+                <span className={`pill pill--${notice.isActive ? 'success' : 'pending'}`}>
+                  {notice.isActive ? 'Active' : 'Inactive'}
+                </span>
+                <p className="notice-item__message">{notice.message}</p>
+                <div className="notice-item__actions">
+                  <button
+                    disabled={isBusy}
+                    onClick={() => handleToggle(notice._id)}
+                    className="dashboard__action-btn"
+                  >
+                    {notice.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    disabled={isBusy}
+                    onClick={() => handleDelete(notice._id)}
+                    className="dashboard__action-btn dashboard__action-btn--danger"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 /* ===== Users ===== */
 function UsersSection({ users, setUsers }) {
