@@ -11,6 +11,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const sellerApplicationRoutes = require('./routes/sellerApplicationRoutes');
 const noticeRoutes = require('./routes/noticeRoutes');
+const bannerRoutes = require('./routes/bannerRoutes');
 
 connectDB();
 
@@ -40,6 +41,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/banners', bannerRoutes);
 
 const PORT = process.env.PORT || 5000;
 

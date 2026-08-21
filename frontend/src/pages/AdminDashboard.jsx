@@ -11,11 +11,13 @@ import {
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
 import { updateOrderStatus } from '../services/adminService';
 import { getAllNotices, createNotice, toggleNotice, deleteNotice } from '../services/noticeService';
+import { getAllBanners, createBanner, toggleBanner, deleteBanner } from '../services/bannerService';
 import './AdminDashboard.css';
 
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'banners', label: 'Banners' },
   { id: 'notices', label: 'Notices' },
   { id: 'applications', label: 'Seller Applications' },
   { id: 'users', label: 'Users' },
@@ -34,6 +36,7 @@ function AdminDashboard() {
   const [activity, setActivity] = useState([]);
   const [applications, setApplications] = useState([]);
   const [notices, setNotices] = useState([]);
+  const [banners, setBanners] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -53,6 +56,7 @@ function AdminDashboard() {
         getActivityLog(),
         getAllApplications(),
         getAllNotices(),
+        getAllBanners(),
       ]);
       setStats(statsData);
       setProducts(productsData);
@@ -61,6 +65,7 @@ function AdminDashboard() {
       setActivity(activityData);
       setApplications(applicationsData);
       setNotices(noticesData);
+      setBanners(bannersData);
     } catch (err) {
       setError('Failed to load admin data');
     } finally {
@@ -103,6 +108,7 @@ function AdminDashboard() {
         )}
         {activeSection === 'orders' && <OrdersSection orders={orders} setOrders={setOrders} />}
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
+        {activeSection === 'banners' && <BannersSection banners={banners} setBanners={setBanners} />}
       </main>
     </div>
   );
@@ -227,6 +233,167 @@ function NoticesSection({ notices, setNotices }) {
                     onClick={() => handleDelete(notice._id)}
                     className="dashboard__action-btn dashboard__action-btn--danger"
                   >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+/* ===== Banners ===== */
+function BannersSection({ banners, setBanners }) {
+  const [showForm, setShowForm] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [formData, setFormData] = useState({
+    eyebrow: '',
+    title: '',
+    subtitle: '',
+    ctaLabel: '',
+    ctaLink: '',
+    fullImage: false,
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({ ...formData, [name]: type === 'checkbox' ? checked : value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!imageFile) {
+      setError('Please select a banner image');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const data = new FormData();
+      data.append('image', imageFile);
+      Object.entries(formData).forEach(([key, value]) => data.append(key, value));
+
+      const created = await createBanner(data);
+      setBanners([created, ...banners]);
+      setShowForm(false);
+      setImageFile(null);
+      setPreview(null);
+      setFormData({ eyebrow: '', title: '', subtitle: '', ctaLabel: '', ctaLink: '', fullImage: false });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create banner');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggle = async (id) => {
+    setBusyId(id);
+    try {
+      const updated = await toggleBanner(id);
+      setBanners(banners.map((b) => (b._id === id ? updated : b)));
+    } catch (err) {
+      console.error('Failed to toggle banner', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setBusyId(id);
+    try {
+      await deleteBanner(id);
+      setBanners(banners.filter((b) => b._id !== id));
+    } catch (err) {
+      console.error('Failed to delete banner', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Homepage Banners</h2>
+        <button onClick={() => setShowForm(!showForm)} className="dashboard__cta">
+          {showForm ? 'Cancel' : '+ Add Banner'}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="banner-form">
+          {error && <p className="checkout-form__error">{error}</p>}
+
+          <div className="banner-form__layout">
+            <div>
+              <div className="banner-form__preview">
+                {preview ? <img src={preview} alt="Preview" /> : <span>Image preview</span>}
+              </div>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} />
+            </div>
+
+            <div className="banner-form__fields">
+              <label className="banner-form__checkbox">
+                <input type="checkbox" name="fullImage" checked={formData.fullImage} onChange={handleChange} />
+                <span>Full-image banner (text already baked into the image, e.g. a designed ad)</span>
+              </label>
+
+              {!formData.fullImage && (
+                <>
+                  <input type="text" name="eyebrow" value={formData.eyebrow} onChange={handleChange} placeholder="Eyebrow text (e.g. Flash Sale)" />
+                  <input type="text" name="title" value={formData.title} onChange={handleChange} placeholder="Headline" />
+                  <input type="text" name="subtitle" value={formData.subtitle} onChange={handleChange} placeholder="Subtitle" />
+                  <input type="text" name="ctaLabel" value={formData.ctaLabel} onChange={handleChange} placeholder="Button label (e.g. Shop now)" />
+                </>
+              )}
+
+              <input type="text" name="ctaLink" value={formData.ctaLink} onChange={handleChange} placeholder="Link when clicked (e.g. /?search=Electronics)" />
+
+              <button type="submit" disabled={submitting} className="dashboard__cta">
+                {submitting ? 'Uploading...' : 'Create Banner'}
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
+
+      {banners.length === 0 ? (
+        <div className="dashboard__empty"><p>No banners yet.</p></div>
+      ) : (
+        <div className="banner-list">
+          {banners.map((banner) => {
+            const isBusy = busyId === banner._id;
+            return (
+              <div key={banner._id} className="banner-list__item" style={{ opacity: isBusy ? 0.5 : 1 }}>
+                <img src={banner.image} alt={banner.title || 'Banner'} className="banner-list__thumb" />
+                <div className="banner-list__info">
+                  <span className={`pill pill--${banner.isActive ? 'success' : 'pending'}`}>
+                    {banner.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <p className="banner-list__title">{banner.title || (banner.fullImage ? 'Full-image banner' : 'Untitled')}</p>
+                  {banner.ctaLink && <p className="banner-list__link">→ {banner.ctaLink}</p>}
+                </div>
+                <div className="banner-list__actions">
+                  <button disabled={isBusy} onClick={() => handleToggle(banner._id)} className="dashboard__action-btn">
+                    {banner.isActive ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button disabled={isBusy} onClick={() => handleDelete(banner._id)} className="dashboard__action-btn dashboard__action-btn--danger">
                     Delete
                   </button>
                 </div>

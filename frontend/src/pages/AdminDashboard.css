@@ -591,3 +591,114 @@
   gap: 8px;
   flex-shrink: 0;
 }
+
+.banner-form {
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+}
+
+.banner-form__layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: var(--space-lg);
+}
+
+.banner-form__preview {
+  aspect-ratio: 16 / 9;
+  background: var(--color-canvas);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+}
+
+.banner-form__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.banner-form__preview span {
+  font-size: 12px;
+  color: var(--color-ink-faint);
+}
+
+.banner-form__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.banner-form__fields input[type="text"] {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+}
+
+.banner-form__checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+
+.banner-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.banner-list__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-sm);
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.banner-list__thumb {
+  width: 100px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.banner-list__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.banner-list__title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.banner-list__link {
+  font-size: 12px;
+  color: var(--color-ink-faint);
+  font-family: var(--font-mono);
+}
+
+.banner-list__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 650px) {
+  .banner-form__layout {
+    grid-template-columns: 1fr;
+  }
+}
