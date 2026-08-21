@@ -45,33 +45,45 @@ function AdminDashboard() {
     fetchAll();
   }, []);
 
-  const fetchAll = async () => {
-    setLoading(true);
-    try {
-      const [statsData, productsData, usersData, ordersData, activityData, applicationsData, noticesData] = await Promise.all([
-        getDashboardStats(),
-        getAllProductsAdmin(),
-        getAllUsers(),
-        getAllOrdersAdmin(),
-        getActivityLog(),
-        getAllApplications(),
-        getAllNotices(),
-        getAllBanners(),
-      ]);
-      setStats(statsData);
-      setProducts(productsData);
-      setUsers(usersData);
-      setOrders(ordersData);
-      setActivity(activityData);
-      setApplications(applicationsData);
-      setNotices(noticesData);
-      setBanners(bannersData);
-    } catch (err) {
-      setError('Failed to load admin data');
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchAll = async () => {
+  setLoading(true);
+
+  try {
+    const [
+      statsData,
+      productsData,
+      usersData,
+      ordersData,
+      activityData,
+      applicationsData,
+      noticesData,
+      bannersData
+    ] = await Promise.all([
+      getDashboardStats(),
+      getAllProductsAdmin(),
+      getAllUsers(),
+      getAllOrdersAdmin(),
+      getActivityLog(),
+      getAllApplications(),
+      getAllNotices(),
+      getAllBanners(),
+    ]);
+
+    setStats(statsData);
+    setProducts(productsData);
+    setUsers(usersData);
+    setOrders(ordersData);
+    setActivity(activityData);
+    setApplications(applicationsData);
+    setNotices(noticesData);
+    setBanners(bannersData);
+
+  } catch (err) {
+    setError('Failed to load admin data');
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) return <p className="page-loading">Loading admin dashboard...</p>;
   if (error) return <p className="page-error">{error}</p>;
