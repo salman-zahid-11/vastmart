@@ -227,7 +227,7 @@ function ApplicationsSection({ applications, setApplications, refreshAll }) {
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000';
+
 
   const handleApprove = async (id) => {
     setReviewingId(id);
@@ -318,14 +318,14 @@ function ApplicationsSection({ applications, setApplications, refreshAll }) {
                 </div>
 
                 <div className="application-card__documents">
-                  <a href={`${API_BASE}${app.nidDocument}`} target="_blank" rel="noreferrer" className="application-card__doc-link">
-                    📄 View NID Document
-                  </a>
-                  {app.tradeLicenseDocument && (
-                    <a href={`${API_BASE}${app.tradeLicenseDocument}`} target="_blank" rel="noreferrer" className="application-card__doc-link">
-                      📄 View Trade License
-                    </a>
-                  )}
+                  <a href={app.nidDocument} target="_blank" rel="noreferrer" className="application-card__doc-link">
+  📄 View NID Document
+</a>
+{app.tradeLicenseDocument && (
+  <a href={app.tradeLicenseDocument} target="_blank" rel="noreferrer" className="application-card__doc-link">
+    📄 View Trade License
+  </a>
+)}
                 </div>
 
                 {app.status === 'rejected' && app.rejectionReason && (
@@ -374,6 +374,7 @@ function ApplicationsSection({ applications, setApplications, refreshAll }) {
 function ProductsSection({ products, setProducts, refreshStats }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [filter, setFilter] = useState('pending');
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const handleApprove = async (productId, isApproved) => {
     setUpdatingId(productId);
@@ -420,11 +421,15 @@ function ProductsSection({ products, setProducts, refreshStats }) {
               </tr>
             </thead>
             <tbody>
-              {visibleProducts.map((product) => {
+                            {visibleProducts.map((product) => {
                 const isUpdating = updatingId === product._id;
                 return (
                   <tr key={product._id} style={{ opacity: isUpdating ? 0.5 : 1 }}>
-                    <td className="admin-table__name">{product.name}</td>
+                    <td className="admin-table__name">
+                      <button className="admin-table__link-btn" onClick={() => setSelectedProduct(product)}>
+                        {product.name}
+                      </button>
+                    </td>
                     <td>{product.seller?.name || 'Unknown'}</td>
                     <td className="admin-table__mono">৳{product.price}</td>
                     <td>
@@ -435,6 +440,9 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                       )}
                     </td>
                     <td>
+                      <button onClick={() => setSelectedProduct(product)} className="dashboard__action-btn">
+                        View
+                      </button>
                       {product.isApproved ? (
                         <button disabled={isUpdating} onClick={() => handleApprove(product._id, false)} className="dashboard__action-btn dashboard__action-btn--danger">
                           Reject
@@ -450,8 +458,125 @@ function ProductsSection({ products, setProducts, refreshStats }) {
               })}
             </tbody>
           </table>
-        </div>
+                </div>
       )}
+
+      {selectedProduct && (
+        <ProductDetailModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onApprove={(id, approved) => {
+            handleApprove(id, approved);
+            setSelectedProduct(null);
+          }}
+          isUpdating={updatingId === selectedProduct._id}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ===== Product Detail Modal ===== */
+function ProductDetailModal({ product, onClose, onApprove, isUpdating }) {
+  const [activeImage, setActiveImage] = useState(0);
+  const images = product.images?.length > 0 ? product.images : ['https://via.placeholder.com/400'];
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+
+        <div className="product-modal">
+          <div className="product-modal__images">
+            <div className="product-modal__main-image">
+              <img src={images[activeImage]} alt={product.name} />
+            </div>
+            {images.length > 1 && (
+              <div className="product-modal__thumbs">
+                {images.map((img, i) => (
+                  <button
+                    key={i}
+                    className={`product-modal__thumb ${i === activeImage ? 'product-modal__thumb--active' : ''}`}
+                    onClick={() => setActiveImage(i)}
+                  >
+                    <img src={img} alt={`View ${i + 1}`} />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="product-modal__info">
+            <span className={`pill pill--${product.isApproved ? 'success' : 'pending'}`}>
+              {product.isApproved ? 'Approved' : 'Pending Review'}
+            </span>
+
+            <h2 className="product-modal__title">{product.name}</h2>
+            <p className="product-modal__price">৳{product.price}</p>
+
+            <div className="product-modal__meta-grid">
+              <div>
+                <span>Category</span>
+                <p>{product.category}{product.subCategory ? ` / ${product.subCategory}` : ''}</p>
+              </div>
+              <div>
+                <span>Brand</span>
+                <p>{product.brand || '—'}</p>
+              </div>
+              <div>
+                <span>Stock</span>
+                <p>{product.stock} units</p>
+              </div>
+              <div>
+                <span>Type</span>
+                <p style={{ textTransform: 'capitalize' }}>{product.productType}</p>
+              </div>
+              <div>
+                <span>Seller</span>
+                <p>{product.seller?.name || 'Unknown'}</p>
+              </div>
+              <div>
+                <span>Seller Email</span>
+                <p>{product.seller?.email || '—'}</p>
+              </div>
+            </div>
+
+            <div className="product-modal__description">
+              <span>Description</span>
+              <p>{product.description}</p>
+            </div>
+
+            <div className="product-modal__actions">
+              {product.isApproved ? (
+                <button
+                  disabled={isUpdating}
+                  onClick={() => onApprove(product._id, false)}
+                  className="dashboard__action-btn dashboard__action-btn--danger"
+                >
+                  Reject Product
+                </button>
+              ) : (
+                <>
+                  <button
+                    disabled={isUpdating}
+                    onClick={() => onApprove(product._id, true)}
+                    className="dashboard__action-btn dashboard__action-btn--success"
+                  >
+                    Approve Product
+                  </button>
+                  <button
+                    disabled={isUpdating}
+                    onClick={() => onApprove(product._id, false)}
+                    className="dashboard__action-btn dashboard__action-btn--danger"
+                  >
+                    Reject Product
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -165,7 +165,7 @@ function Header() {
               <button className="site-header__action" onClick={() => setMenuOpen((prev) => !prev)}>
                 <div className="site-header__avatar">
                   {user.avatar ? (
-                    <img src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:5000'}${user.avatar}`} alt={user.name} />
+                    <img src={user.avatar} alt={user.name} />
                   ) : (
                     user.name.charAt(0).toUpperCase()
                   )}
