@@ -1,12 +1,14 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { createProduct } from '../services/productService';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import { createProduct, updateProduct, getProductById } from '../services/productService';
 import './AddProduct.css';
 
 const MAX_IMAGES = 5;
 
 function AddProduct() {
   const navigate = useNavigate();
+  const { id } = useParams(); // present only when editing
+  const isEditMode = Boolean(id);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -18,11 +20,36 @@ function AddProduct() {
     stock: '',
     productType: 'physical',
   });
-  const [images, setImages] = useState([]); // File objects
-  const [previews, setPreviews] = useState([]);
-    const [imageUrls, setImageUrls] = useState(['']);  // object URLs
+  const [existingImages, setExistingImages] = useState([]); // URLs already saved (edit mode)
+  const [newImages, setNewImages] = useState([]); // new File objects
+  const [newPreviews, setNewPreviews] = useState([]);
+  const [imageUrls, setImageUrls] = useState(['']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(isEditMode);
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    getProductById(id)
+      .then((product) => {
+        setFormData({
+          name: product.name || '',
+          description: product.description || '',
+          price: product.price || '',
+          category: product.category || '',
+          subCategory: product.subCategory || '',
+          brand: product.brand || '',
+          stock: product.stock ?? '',
+          productType: product.productType || 'physical',
+        });
+        setExistingImages(product.images || []);
+      })
+      .catch(() => setError('Failed to load product'))
+      .finally(() => setPageLoading(false));
+  }, [id, isEditMode]);
+
+  const totalImageCount = existingImages.length + newImages.length;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,23 +57,27 @@ function AddProduct() {
 
   const handleImageSelect = (e) => {
     const files = Array.from(e.target.files);
-    const combined = [...images, ...files].slice(0, MAX_IMAGES);
-    setImages(combined);
-    setPreviews(combined.map((file) => URL.createObjectURL(file)));
-    e.target.value = ''; // allow re-selecting the same file if removed
+    const combined = [...newImages, ...files].slice(0, MAX_IMAGES - existingImages.length);
+    setNewImages(combined);
+    setNewPreviews(combined.map((file) => URL.createObjectURL(file)));
+    e.target.value = '';
   };
 
-  const handleRemoveImage = (index) => {
-    const newImages = images.filter((_, i) => i !== index);
-    setImages(newImages);
-    setPreviews(newImages.map((file) => URL.createObjectURL(file)));
+  const handleRemoveExisting = (index) => {
+    setExistingImages(existingImages.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNew = (index) => {
+    const filtered = newImages.filter((_, i) => i !== index);
+    setNewImages(filtered);
+    setNewPreviews(filtered.map((file) => URL.createObjectURL(file)));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (images.length === 0) {
+    if (totalImageCount === 0 && imageUrls.every((u) => !u.trim())) {
       setError('Please add at least one product image');
       return;
     }
@@ -62,42 +93,63 @@ function AddProduct() {
       data.append('brand', formData.brand);
       data.append('stock', formData.stock);
       data.append('productType', formData.productType);
-      images.forEach((file) => data.append('images', file));
+      newImages.forEach((file) => data.append('images', file));
 
       const validUrls = imageUrls.map((u) => u.trim()).filter(Boolean);
-      if (validUrls.length > 0) {
-        data.append('imageUrls', JSON.stringify(validUrls));
+      const combinedExisting = [...existingImages, ...validUrls];
+
+      if (isEditMode) {
+        data.append('existingImages', JSON.stringify(combinedExisting));
+        await updateProduct(id, data);
+      } else {
+        if (validUrls.length > 0) {
+          data.append('imageUrls', JSON.stringify(validUrls));
+        }
+        await createProduct(data);
       }
 
-      await createProduct(data);
       navigate('/seller/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create product');
+      setError(err.response?.data?.message || 'Failed to save product');
     } finally {
       setLoading(false);
     }
   };
 
+  if (pageLoading) return <p className="page-loading">Loading product...</p>;
+
   return (
     <div className="add-product">
       <Link to="/seller/dashboard" className="add-product__back">← Back to dashboard</Link>
-      <h1 className="add-product__title">Add a new product</h1>
-      <p className="add-product__subtitle">It'll go live once an admin approves it.</p>
+      <h1 className="add-product__title">{isEditMode ? 'Edit product' : 'Add a new product'}</h1>
+      <p className="add-product__subtitle">
+        {isEditMode
+          ? 'Changes will be sent for admin re-approval before going live again.'
+          : "It'll go live once an admin approves it."}
+      </p>
 
       {error && <p className="checkout-form__error">{error}</p>}
 
       <form onSubmit={handleSubmit} className="add-product__form">
         <div className="add-product__preview">
           <div className="add-product__image-grid">
-            {previews.map((src, i) => (
-              <div key={i} className="add-product__image-slot add-product__image-slot--filled">
-                <img src={src} alt={`Preview ${i + 1}`} />
-                <button type="button" onClick={() => handleRemoveImage(i)} className="add-product__image-remove">×</button>
-                {i === 0 && <span className="add-product__image-main-badge">Main</span>}
+            {existingImages.map((src, i) => (
+              <div key={`existing-${i}`} className="add-product__image-slot add-product__image-slot--filled">
+                <img src={src} alt={`Existing ${i + 1}`} />
+                <button type="button" onClick={() => handleRemoveExisting(i)} className="add-product__image-remove">×</button>
+                {i === 0 && existingImages.length > 0 && <span className="add-product__image-main-badge">Main</span>}
               </div>
             ))}
 
-            {images.length < MAX_IMAGES && (
+            {newPreviews.map((src, i) => (
+              <div key={`new-${i}`} className="add-product__image-slot add-product__image-slot--filled">
+                <img src={src} alt={`New ${i + 1}`} />
+                <button type="button" onClick={() => handleRemoveNew(i)} className="add-product__image-remove">×</button>
+                {existingImages.length === 0 && i === 0 && <span className="add-product__image-main-badge">Main</span>}
+              </div>
+            ))}
+
+            {totalImageCount < MAX_IMAGES && (
               <label className="add-product__image-slot add-product__image-slot--add">
                 <input
                   type="file"
@@ -111,8 +163,8 @@ function AddProduct() {
               </label>
             )}
           </div>
-                   <p className="add-product__image-hint">
-            {images.length} / {MAX_IMAGES} images · First photo is the main image
+          <p className="add-product__image-hint">
+            {totalImageCount} / {MAX_IMAGES} images · First photo is the main image
           </p>
 
           <div className="add-product__url-section">
@@ -146,12 +198,12 @@ function AddProduct() {
         <div className="add-product__fields">
           <div className="checkout-form__field">
             <label>Product Name</label>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="e.g. Wireless Mechanical Keyboard" />
+            <input type="text" name="name" value={formData.name} onChange={handleChange} required />
           </div>
 
           <div className="checkout-form__field">
             <label>Description</label>
-            <textarea name="description" value={formData.description} onChange={handleChange} rows={4} required placeholder="Describe what makes this product great..." />
+            <textarea name="description" value={formData.description} onChange={handleChange} rows={4} required />
           </div>
 
           <div className="checkout-form__row">
@@ -168,7 +220,7 @@ function AddProduct() {
           <div className="checkout-form__row">
             <div className="checkout-form__field">
               <label>Category</label>
-              <input type="text" name="category" value={formData.category} onChange={handleChange} required placeholder="e.g. Electronics" />
+              <input type="text" name="category" value={formData.category} onChange={handleChange} required />
             </div>
             <div className="checkout-form__field">
               <label>Sub-category</label>
@@ -191,7 +243,7 @@ function AddProduct() {
           </div>
 
           <button type="submit" disabled={loading} className="add-product__submit">
-            {loading ? 'Creating...' : 'Create Product'}
+            {loading ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Product'}
           </button>
         </div>
       </form>

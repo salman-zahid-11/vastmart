@@ -44,6 +44,8 @@ const createProduct = async (req, res) => {
     });
 
 
+
+
     await logActivity({
       user: req.user,
       action: 'product_created',
@@ -58,6 +60,73 @@ const createProduct = async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
+
+
+// @desc   Update a product (owner seller or admin only)
+// @route  PUT /api/products/:id
+const updateProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Only the product's own seller or an admin can edit it
+    if (product.seller.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Not authorized to edit this product' });
+    }
+
+    const { name, description, price, category, subCategory, brand, stock, productType, tags, existingImages } = req.body;
+
+    if (name) product.name = name;
+    if (description) product.description = description;
+    if (price !== undefined) product.price = price;
+    if (category) product.category = category;
+    if (subCategory !== undefined) product.subCategory = subCategory;
+    if (brand !== undefined) product.brand = brand;
+    if (stock !== undefined) product.stock = stock;
+    if (productType) product.productType = productType;
+    if (tags) product.tags = tags;
+
+    // Rebuild images: kept existing ones (sent back from frontend) + any newly uploaded files
+    let images = [];
+    if (existingImages) {
+      try {
+        const parsed = JSON.parse(existingImages);
+        if (Array.isArray(parsed)) images = parsed;
+      } catch (e) {
+        // ignore malformed input
+      }
+    }
+    if (req.files && req.files.length > 0) {
+      images = [...images, ...req.files.map((file) => file.path)];
+    }
+    if (images.length > 0) {
+      product.images = images;
+    }
+
+    // Editing a product sends it back for re-approval — prevents sellers from
+    // slipping in different content after admin already approved the original
+    product.isApproved = false;
+
+    await product.save();
+
+    await logActivity({
+      user: req.user,
+      action: 'product_created', // reused enum — see note
+      description: `${req.user.name} updated product "${product.name}" (sent for re-approval)`,
+      meta: { productId: product._id },
+    });
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+
 
 // @desc   Get all approved products (public)
 // @route  GET /api/products
@@ -193,4 +262,4 @@ const approveProduct = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories };
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories, updateProduct };

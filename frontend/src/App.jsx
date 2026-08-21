@@ -35,6 +35,7 @@ function App() {
         <Route path="/orders" element={<OrderHistory />} />
         <Route path="/seller/dashboard" element={<SellerDashboard />} />
         <Route path="/seller/products/new" element={<AddProduct />} />
+        <Route path="/seller/products/edit/:id" element={<AddProduct />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/profile" element={<Profile />} />

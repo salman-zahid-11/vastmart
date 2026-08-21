@@ -54,41 +54,47 @@ function SellerDashboard() {
 
       <div className="dashboard__section">
         <h3>My Products</h3>
-        {products.length === 0 ? (
-          <div className="dashboard__empty">
-            <p>You haven't listed any products yet.</p>
-            <Link to="/seller/products/new">Add your first product →</Link>
-          </div>
-        ) : (
-          <div className="dashboard__table-wrap">
-            <table className="dashboard__table">
-              <thead>
-                <tr>
-                  <th>Product</th>
-                  <th>Price</th>
-                  <th>Stock</th>
-                  <th>Status</th>
+              {products.length === 0 ? (
+        <div className="dashboard__empty">
+          <p>You haven't listed any products yet.</p>
+          <Link to="/seller/products/new">Add your first product →</Link>
+        </div>
+      ) : (
+        <div className="dashboard__table-wrap">
+          <table className="dashboard__table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product._id}>
+                  <td className="dashboard__table-name">{product.name}</td>
+                  <td className="dashboard__table-mono">৳{product.price}</td>
+                  <td className="dashboard__table-mono">{product.stock}</td>
+                  <td>
+                    {product.isApproved ? (
+                      <span className="pill pill--success">Approved</span>
+                    ) : (
+                      <span className="pill pill--pending">Pending</span>
+                    )}
+                  </td>
+                  <td>
+                    <Link to={`/seller/products/edit/${product._id}`} className="dashboard__action-btn">
+                      Edit
+                    </Link>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {products.map((product) => (
-                  <tr key={product._id}>
-                    <td className="dashboard__table-name">{product.name}</td>
-                    <td className="dashboard__table-mono">৳{product.price}</td>
-                    <td className="dashboard__table-mono">{product.stock}</td>
-                    <td>
-                      {product.isApproved ? (
-                        <span className="pill pill--success">Approved</span>
-                      ) : (
-                        <span className="pill pill--pending">Pending</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
       </div>
 
       <div className="dashboard__section">
