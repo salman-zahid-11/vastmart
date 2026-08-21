@@ -26,3 +26,10 @@ export const createProduct = async (formData) => {
   });
   return response.data;
 };
+
+export const updateProduct = async (id, formData) => {
+  const response = await api.put(`/products/${id}`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
