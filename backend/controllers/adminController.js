@@ -11,10 +11,10 @@ const getDashboardStats = async (req, res) => {
     const totalSellers = await User.countDocuments({ role: 'seller' });
     const totalProducts = await Product.countDocuments({});
     const pendingProducts = await Product.countDocuments({ isApproved: false });
-    const totalOrders = await Order.countDocuments({});
+        const totalOrders = await Order.countDocuments({});
 
-    const orders = await Order.find({});
-    const totalRevenue = orders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const revenueOrders = await Order.find({ orderStatus: { $ne: 'cancelled' } });
+    const totalRevenue = revenueOrders.reduce((sum, order) => sum + order.totalAmount, 0);
 
     res.status(200).json({
       totalUsers,
@@ -85,7 +85,16 @@ const getAllOrdersAdmin = async (req, res) => {
 // @route  GET /api/admin/activity
 const getActivityLog = async (req, res) => {
   try {
-    const logs = await ActivityLog.find({}).sort({ createdAt: -1 }).limit(200);
+    let logs = await ActivityLog.find({}).sort({ createdAt: -1 }).limit(200);
+
+    // Moderators see everyone's activity except super admins' — keeps
+    // super admin actions (coupon/banner management etc.) private from staff
+    if (req.user.adminLevel !== 'super_admin') {
+      const superAdmins = await User.find({ role: 'admin', adminLevel: 'super_admin' }).select('_id');
+      const superAdminIds = superAdmins.map((u) => u._id.toString());
+      logs = logs.filter((log) => !superAdminIds.includes(log.user?.toString()));
+    }
+
     res.status(200).json(logs);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -33,7 +33,7 @@ const SECTIONS = [
 function AdminDashboard() {
     const { user } = useAuth();
   const isSuperAdmin = user?.adminLevel === 'super_admin';
-      const ALL_SECTIONS = [
+    const ALL_SECTIONS = [
     { id: 'overview', label: 'Overview' },
     { id: 'manage-admins', label: 'Manage Admins', superOnly: true },
     { id: 'coupons', label: 'Coupons', superOnly: true },
@@ -65,45 +65,43 @@ function AdminDashboard() {
     fetchAll();
   }, []);
 
-const fetchAll = async () => {
-  setLoading(true);
+  const fetchAll = async () => {
+    setLoading(true);
+    try {
+      const [statsData, productsData, usersData, ordersData, applicationsData, noticesData, activityData] = await Promise.all([
+        getDashboardStats(),
+        getAllProductsAdmin(),
+        getAllUsers(),
+        getAllOrdersAdmin(),
+        getAllApplications(),
+        getAllNotices(),
+        getActivityLog(),
+      ]);
+      setStats(statsData);
+      setProducts(productsData);
+      setUsers(usersData);
+      setOrders(ordersData);
+      setApplications(applicationsData);
+      setNotices(noticesData);
+      setActivity(activityData);
 
-  try {
-    const [
-      statsData,
-      productsData,
-      usersData,
-      ordersData,
-      activityData,
-      applicationsData,
-      noticesData,
-      bannersData
-    ] = await Promise.all([
-      getDashboardStats(),
-      getAllProductsAdmin(),
-      getAllUsers(),
-      getAllOrdersAdmin(),
-      getActivityLog(),
-      getAllApplications(),
-      getAllNotices(),
-      getAllBanners(),
-    ]);
-
-    setStats(statsData);
-    setProducts(productsData);
-    setUsers(usersData);
-    setOrders(ordersData);
-    setActivity(activityData);
-    setApplications(applicationsData);
-    setNotices(noticesData);
-    setBanners(bannersData);
-
-  } catch (err) {
-    setError('Failed to load admin data');
-  } finally {
-    setLoading(false);
-  }
-};
+      // Only super admins can access these — fetch separately so a 403 here
+      // never breaks the rest of the dashboard for moderators
+      if (isSuperAdmin) {
+        try {
+          const [bannersData, couponsData] = await Promise.all([getAllBanners(), getAllCoupons()]);
+          setBanners(bannersData);
+          setCoupons(couponsData);
+        } catch (err) {
+          console.error('Failed to load super-admin data', err);
+        }
+      }
+    } catch (err) {
+      setError('Failed to load admin data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (loading) return <p className="page-loading">Loading admin dashboard...</p>;
   if (error) return <p className="page-error">{error}</p>;
