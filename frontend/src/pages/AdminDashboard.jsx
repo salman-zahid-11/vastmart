@@ -79,6 +79,7 @@ function AdminDashboard() {
         getAllApplications(),
         getAllNotices(),
         getActivityLog(),
+        getAbandonedActivity(),
       ]);
       setStats(statsData);
       setProducts(productsData);
