@@ -733,3 +733,17 @@
     grid-template-columns: 1fr;
   }
 }
+
+.admin-sidebar__tier {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 2px;
+}
+
+.admin-sidebar__tier--mod {
+  color: rgba(255, 255, 255, 0.5);
+}

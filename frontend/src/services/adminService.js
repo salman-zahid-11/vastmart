@@ -39,3 +39,8 @@ export const updateOrderStatus = async (orderId, orderStatus) => {
   const response = await api.put(`/orders/${orderId}/status`, { orderStatus });
   return response.data;
 };
+
+export const updateAdminLevel = async (userId, role, adminLevel) => {
+  const response = await api.put(`/admin/users/${userId}/admin-level`, { role, adminLevel });
+  return response.data;
+};

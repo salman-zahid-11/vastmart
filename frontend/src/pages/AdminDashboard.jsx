@@ -13,6 +13,8 @@ import { updateOrderStatus } from '../services/adminService';
 import { getAllNotices, createNotice, toggleNotice, deleteNotice } from '../services/noticeService';
 import { getAllBanners, createBanner, toggleBanner, deleteBanner } from '../services/bannerService';
 import { getAllCoupons, createCoupon, toggleCoupon, deleteCoupon } from '../services/couponService';
+import { useAuth } from '../context/AuthContext';
+import { updateAdminLevel } from '../services/adminService';
 import './AdminDashboard.css';
 
 
@@ -29,6 +31,21 @@ const SECTIONS = [
 ];
 
 function AdminDashboard() {
+    const { user } = useAuth();
+  const isSuperAdmin = user?.adminLevel === 'super_admin';
+      const ALL_SECTIONS = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'manage-admins', label: 'Manage Admins', superOnly: true },
+    { id: 'coupons', label: 'Coupons', superOnly: true },
+    { id: 'banners', label: 'Banners', superOnly: true },
+    { id: 'notices', label: 'Notices' },
+    { id: 'applications', label: 'Seller Applications' },
+    { id: 'users', label: 'Users' },
+    { id: 'products', label: 'Products' },
+    { id: 'orders', label: 'Orders' },
+    { id: 'activity', label: 'Activity Log' },
+  ];
+  const SECTIONS = ALL_SECTIONS.filter((s) => !s.superOnly || isSuperAdmin);
   const [activeSection, setActiveSection] = useState('overview');
 
   const [stats, setStats] = useState(null);
@@ -94,7 +111,9 @@ const fetchAll = async () => {
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
-        <p className="admin-sidebar__eyebrow">Admin</p>
+        <p className="admin-sidebar__eyebrow">
+  Admin {isSuperAdmin ? <span className="admin-sidebar__tier">Super Admin</span> : <span className="admin-sidebar__tier admin-sidebar__tier--mod">Moderator</span>}
+</p>
         <nav className="admin-sidebar__nav">
           {SECTIONS.map((section) => (
             <button
@@ -117,7 +136,7 @@ const fetchAll = async () => {
         {activeSection === 'applications' && (
           <ApplicationsSection applications={applications} setApplications={setApplications} refreshAll={fetchAll} />
         )}
-        {activeSection === 'users' && <UsersSection users={users} setUsers={setUsers} />}
+        {activeSection === 'users' && <UsersSection users={users} setUsers={setUsers} isSuperAdmin={isSuperAdmin} />}
         {activeSection === 'products' && (
           <ProductsSection products={products} setProducts={setProducts} refreshStats={fetchAll} />
         )}
@@ -125,6 +144,7 @@ const fetchAll = async () => {
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
         {activeSection === 'banners' && <BannersSection banners={banners} setBanners={setBanners} />}
         {activeSection === 'coupons' && <CouponsSection coupons={coupons} setCoupons={setCoupons} />}
+        {activeSection === 'manage-admins' && <ManageAdminsSection users={users} setUsers={setUsers} />}
       </main>
     </div>
   );
@@ -426,7 +446,7 @@ function BannersSection({ banners, setBanners }) {
 
 
 /* ===== Users ===== */
-function UsersSection({ users, setUsers }) {
+function UsersSection({ users, setUsers, isSuperAdmin }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [roleFilter, setRoleFilter] = useState('all');
 
@@ -487,23 +507,27 @@ function UsersSection({ users, setUsers }) {
                       {u.status}
                     </span>
                   </td>
-                  <td>
-                    {u.status === 'active' ? (
-                      <button
-                        disabled={isUpdating}
-                        onClick={() => handleStatusChange(u._id, 'suspended')}
-                        className="dashboard__action-btn dashboard__action-btn--danger"
-                      >
-                        Suspend
-                      </button>
+                                    <td>
+                    {isSuperAdmin ? (
+                      u.status === 'active' ? (
+                        <button
+                          disabled={isUpdating}
+                          onClick={() => handleStatusChange(u._id, 'suspended')}
+                          className="dashboard__action-btn dashboard__action-btn--danger"
+                        >
+                          Suspend
+                        </button>
+                      ) : (
+                        <button
+                          disabled={isUpdating}
+                          onClick={() => handleStatusChange(u._id, 'active')}
+                          className="dashboard__action-btn dashboard__action-btn--success"
+                        >
+                          Reactivate
+                        </button>
+                      )
                     ) : (
-                      <button
-                        disabled={isUpdating}
-                        onClick={() => handleStatusChange(u._id, 'active')}
-                        className="dashboard__action-btn dashboard__action-btn--success"
-                      >
-                        Reactivate
-                      </button>
+                      <span style={{ fontSize: '12px', color: 'var(--color-ink-faint)' }}>Super admin only</span>
                     )}
                   </td>
                 </tr>
@@ -1142,4 +1166,122 @@ function CouponsSection({ coupons, setCoupons }) {
   );
 }
 
+
+/* ===== Manage Admins (Super Admin only) ===== */
+function ManageAdminsSection({ users, setUsers }) {
+  const [busyId, setBusyId] = useState(null);
+
+  const handlePromote = async (userId, level) => {
+    setBusyId(userId);
+    try {
+      const updated = await updateAdminLevel(userId, 'admin', level);
+      setUsers(users.map((u) => (u._id === userId ? { ...u, role: updated.role, adminLevel: updated.adminLevel } : u)));
+    } catch (err) {
+      console.error('Failed to update admin level', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleRevoke = async (userId) => {
+    setBusyId(userId);
+    try {
+      const updated = await updateAdminLevel(userId, 'customer', null);
+      setUsers(users.map((u) => (u._id === userId ? { ...u, role: updated.role, adminLevel: updated.adminLevel } : u)));
+    } catch (err) {
+      console.error('Failed to revoke admin access', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const admins = users.filter((u) => u.role === 'admin');
+  const nonAdmins = users.filter((u) => u.role !== 'admin');
+
+  return (
+    <div>
+      <h2 className="admin-content__title">Manage Admins</h2>
+      <p className="admin-content__subtitle">Promote staff to moderator or super admin, or revoke access.</p>
+
+      <h3 style={{ fontSize: '15px', marginBottom: '12px' }}>Current Admins</h3>
+      <div className="admin-table-wrap" style={{ marginBottom: 'var(--space-xl)' }}>
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Level</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {admins.map((u) => {
+              const isBusy = busyId === u._id;
+              return (
+                <tr key={u._id} style={{ opacity: isBusy ? 0.5 : 1 }}>
+                  <td className="admin-table__name">{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <span className={`role-pill ${u.adminLevel === 'super_admin' ? 'role-pill--admin' : 'role-pill--seller'}`}>
+                      {u.adminLevel === 'super_admin' ? 'Super Admin' : 'Moderator'}
+                    </span>
+                  </td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    {u.adminLevel !== 'super_admin' && (
+                      <button disabled={isBusy} onClick={() => handlePromote(u._id, 'super_admin')} className="dashboard__action-btn dashboard__action-btn--success">
+                        Make Super Admin
+                      </button>
+                    )}
+                    {u.adminLevel !== 'moderator' && (
+                      <button disabled={isBusy} onClick={() => handlePromote(u._id, 'moderator')} className="dashboard__action-btn">
+                        Make Moderator
+                      </button>
+                    )}
+                    <button disabled={isBusy} onClick={() => handleRevoke(u._id)} className="dashboard__action-btn dashboard__action-btn--danger">
+                      Revoke Access
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style={{ fontSize: '15px', marginBottom: '12px' }}>Promote a User to Admin</h3>
+      <div className="admin-table-wrap">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Current Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {nonAdmins.map((u) => {
+              const isBusy = busyId === u._id;
+              return (
+                <tr key={u._id} style={{ opacity: isBusy ? 0.5 : 1 }}>
+                  <td className="admin-table__name">{u.name}</td>
+                  <td>{u.email}</td>
+                  <td><span className={`role-pill role-pill--${u.role}`}>{u.role}</span></td>
+                  <td style={{ display: 'flex', gap: 6 }}>
+                    <button disabled={isBusy} onClick={() => handlePromote(u._id, 'moderator')} className="dashboard__action-btn">
+                      Make Moderator
+                    </button>
+                    <button disabled={isBusy} onClick={() => handlePromote(u._id, 'super_admin')} className="dashboard__action-btn dashboard__action-btn--success">
+                      Make Super Admin
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 export default AdminDashboard;

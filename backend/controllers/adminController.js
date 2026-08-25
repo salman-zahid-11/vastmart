@@ -92,10 +92,46 @@ const getActivityLog = async (req, res) => {
   }
 };
 
+// @desc   Promote/demote a user's admin level (super admin only)
+// @route  PUT /api/admin/users/:id/admin-level
+const updateAdminLevel = async (req, res) => {
+  try {
+    const { role, adminLevel } = req.body; // role: 'admin' | 'customer' (to revoke), adminLevel: 'moderator' | 'super_admin' | null
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: 'You cannot change your own admin level' });
+    }
+
+    if (role === 'admin') {
+      if (!['moderator', 'super_admin'].includes(adminLevel)) {
+        return res.status(400).json({ message: 'Invalid admin level' });
+      }
+      user.role = 'admin';
+      user.adminLevel = adminLevel;
+    } else {
+      // Revoking admin access — return them to customer
+      user.role = 'customer';
+      user.adminLevel = null;
+    }
+
+    await user.save();
+
+    res.status(200).json({ _id: user._id, name: user.name, role: user.role, adminLevel: user.adminLevel });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
   updateUserStatus,
   getAllOrdersAdmin,
   getActivityLog,
+  updateAdminLevel,
 };

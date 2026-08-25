@@ -28,6 +28,11 @@ const userSchema = new mongoose.Schema(
       enum: ['customer', 'seller', 'admin'],
       default: 'customer',
     },
+    adminLevel: {
+      type: String,
+      enum: ['moderator', 'super_admin'],
+      default: null, // only meaningful when role === 'admin'
+    },
     isEmailVerified: {
       type: Boolean,
       default: false,

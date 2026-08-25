@@ -42,4 +42,12 @@ const authorizeRoles = (...roles) => {
   };
 };
 
-module.exports = { protect, authorizeRoles };
+// Restricts to super_admin only, among admins. Regular admins (moderators) are blocked.
+const requireSuperAdmin = (req, res, next) => {
+  if (req.user.role !== 'admin' || req.user.adminLevel !== 'super_admin') {
+    return res.status(403).json({ message: 'This action requires super admin access' });
+  }
+  next();
+};
+
+module.exports = { protect, authorizeRoles, requireSuperAdmin };
