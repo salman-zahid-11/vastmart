@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/orderService';
+import { validateCoupon } from '../services/couponService';
 import './Checkout.css';
 
 function Checkout() {
@@ -24,6 +25,10 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,7 +39,29 @@ function Checkout() {
     return sum + price * item.quantity;
   }, 0);
   const shippingFee = 60;
-  const total = itemsTotal + shippingFee;
+  const discountAmount = appliedCoupon?.discountAmount || 0;
+  const total = itemsTotal + shippingFee - discountAmount;
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponError('');
+    setValidatingCoupon(true);
+    try {
+      const result = await validateCoupon(couponCode.trim(), itemsTotal);
+      setAppliedCoupon(result);
+    } catch (err) {
+      setCouponError(err.response?.data?.message || 'Invalid coupon');
+      setAppliedCoupon(null);
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponError('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +72,7 @@ function Checkout() {
       const order = await createOrder({
         shippingAddress: formData,
         paymentMethod,
+        couponCode: appliedCoupon?.code,
       });
 
       navigate(`/order-confirmation/${order._id}`);
@@ -150,7 +178,7 @@ function Checkout() {
           </button>
         </form>
 
-        <aside className="checkout-summary">
+                <aside className="checkout-summary">
           <h3>Order Summary</h3>
           {cart.items.map((item) => (
             <div key={item.product._id} className="checkout-summary__row">
@@ -159,10 +187,41 @@ function Checkout() {
             </div>
           ))}
           <hr />
+
+          <div className="checkout-coupon">
+            {appliedCoupon ? (
+              <div className="checkout-coupon__applied">
+                <span>🎟️ {appliedCoupon.code} applied</span>
+                <button type="button" onClick={handleRemoveCoupon}>Remove</button>
+              </div>
+            ) : (
+              <div className="checkout-coupon__input-row">
+                <input
+                  type="text"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  placeholder="Coupon code"
+                  style={{ textTransform: 'uppercase' }}
+                />
+                <button type="button" onClick={handleApplyCoupon} disabled={validatingCoupon}>
+                  {validatingCoupon ? '...' : 'Apply'}
+                </button>
+              </div>
+            )}
+            {couponError && <p className="checkout-coupon__error">{couponError}</p>}
+          </div>
+
+          <hr />
           <div className="checkout-summary__row">
             <span>Subtotal</span>
             <span>৳{itemsTotal}</span>
           </div>
+          {discountAmount > 0 && (
+            <div className="checkout-summary__row checkout-summary__row--discount">
+              <span>Discount</span>
+              <span>−৳{discountAmount}</span>
+            </div>
+          )}
           <div className="checkout-summary__row">
             <span>Shipping</span>
             <span>৳{shippingFee}</span>

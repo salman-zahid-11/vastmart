@@ -12,11 +12,13 @@ import { getAllApplications, reviewApplication } from '../services/sellerApplica
 import { updateOrderStatus } from '../services/adminService';
 import { getAllNotices, createNotice, toggleNotice, deleteNotice } from '../services/noticeService';
 import { getAllBanners, createBanner, toggleBanner, deleteBanner } from '../services/bannerService';
+import { getAllCoupons, createCoupon, toggleCoupon, deleteCoupon } from '../services/couponService';
 import './AdminDashboard.css';
 
 
 const SECTIONS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'coupons', label: 'Coupons' },
   { id: 'banners', label: 'Banners' },
   { id: 'notices', label: 'Notices' },
   { id: 'applications', label: 'Seller Applications' },
@@ -37,6 +39,7 @@ function AdminDashboard() {
   const [applications, setApplications] = useState([]);
   const [notices, setNotices] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [coupons, setCoupons] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -121,10 +124,13 @@ const fetchAll = async () => {
         {activeSection === 'orders' && <OrdersSection orders={orders} setOrders={setOrders} />}
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
         {activeSection === 'banners' && <BannersSection banners={banners} setBanners={setBanners} />}
+        {activeSection === 'coupons' && <CouponsSection coupons={coupons} setCoupons={setCoupons} />}
       </main>
     </div>
   );
 }
+
+
 
 /* ===== Overview ===== */
 function OverviewSection({ stats }) {
@@ -972,6 +978,166 @@ function ActivitySection({ activity }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/* ===== Coupons ===== */
+function CouponsSection({ coupons, setCoupons }) {
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    code: '',
+    discountType: 'percentage',
+    discountValue: '',
+    minOrderValue: '',
+    maxDiscountAmount: '',
+    usageLimit: '',
+    perUserLimit: '1',
+    expiresAt: '',
+  });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitting(true);
+    try {
+      const created = await createCoupon({
+        code: formData.code,
+        discountType: formData.discountType,
+        discountValue: Number(formData.discountValue),
+        minOrderValue: formData.minOrderValue ? Number(formData.minOrderValue) : 0,
+        maxDiscountAmount: formData.maxDiscountAmount ? Number(formData.maxDiscountAmount) : undefined,
+        usageLimit: formData.usageLimit ? Number(formData.usageLimit) : undefined,
+        perUserLimit: Number(formData.perUserLimit) || 1,
+        expiresAt: formData.expiresAt || undefined,
+      });
+      setCoupons([created, ...coupons]);
+      setShowForm(false);
+      setFormData({
+        code: '', discountType: 'percentage', discountValue: '', minOrderValue: '',
+        maxDiscountAmount: '', usageLimit: '', perUserLimit: '1', expiresAt: '',
+      });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create coupon');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleToggle = async (id) => {
+    setBusyId(id);
+    try {
+      const updated = await toggleCoupon(id);
+      setCoupons(coupons.map((c) => (c._id === id ? updated : c)));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setBusyId(id);
+    try {
+      await deleteCoupon(id);
+      setCoupons(coupons.filter((c) => c._id !== id));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Coupons</h2>
+        <button onClick={() => setShowForm(!showForm)} className="dashboard__cta">
+          {showForm ? 'Cancel' : '+ Create Coupon'}
+        </button>
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSubmit} className="coupon-form">
+          {error && <p className="checkout-form__error">{error}</p>}
+
+          <div className="coupon-form__row">
+            <input type="text" name="code" value={formData.code} onChange={handleChange} placeholder="CODE (e.g. SAVE10)" required style={{ textTransform: 'uppercase' }} />
+            <select name="discountType" value={formData.discountType} onChange={handleChange}>
+              <option value="percentage">Percentage (%)</option>
+              <option value="flat">Flat Amount (৳)</option>
+            </select>
+            <input type="number" name="discountValue" value={formData.discountValue} onChange={handleChange} placeholder="Value" required min="0" />
+          </div>
+
+          <div className="coupon-form__row">
+            <input type="number" name="minOrderValue" value={formData.minOrderValue} onChange={handleChange} placeholder="Min order value (৳)" min="0" />
+            {formData.discountType === 'percentage' && (
+              <input type="number" name="maxDiscountAmount" value={formData.maxDiscountAmount} onChange={handleChange} placeholder="Max discount cap (৳, optional)" min="0" />
+            )}
+            <input type="date" name="expiresAt" value={formData.expiresAt} onChange={handleChange} />
+          </div>
+
+          <div className="coupon-form__row">
+            <input type="number" name="usageLimit" value={formData.usageLimit} onChange={handleChange} placeholder="Total usage limit (blank = unlimited)" min="1" />
+            <input type="number" name="perUserLimit" value={formData.perUserLimit} onChange={handleChange} placeholder="Per-customer limit" min="1" />
+          </div>
+
+          <button type="submit" disabled={submitting} className="dashboard__cta">
+            {submitting ? 'Creating...' : 'Create Coupon'}
+          </button>
+        </form>
+      )}
+
+      {coupons.length === 0 ? (
+        <div className="dashboard__empty"><p>No coupons yet.</p></div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Discount</th>
+                <th>Min Order</th>
+                <th>Usage</th>
+                <th>Expires</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {coupons.map((coupon) => {
+                const isBusy = busyId === coupon._id;
+                return (
+                  <tr key={coupon._id} style={{ opacity: isBusy ? 0.5 : 1 }}>
+                    <td className="admin-table__mono" style={{ fontWeight: 700 }}>{coupon.code}</td>
+                    <td>{coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `৳${coupon.discountValue}`}</td>
+                    <td className="admin-table__mono">৳{coupon.minOrderValue}</td>
+                    <td className="admin-table__mono">{coupon.usedCount}{coupon.usageLimit ? ` / ${coupon.usageLimit}` : ''}</td>
+                    <td>{coupon.expiresAt ? new Date(coupon.expiresAt).toLocaleDateString() : '—'}</td>
+                    <td>
+                      <span className={`pill pill--${coupon.isActive ? 'success' : 'pending'}`}>
+                        {coupon.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </td>
+                    <td style={{ display: 'flex', gap: 6 }}>
+                      <button disabled={isBusy} onClick={() => handleToggle(coupon._id)} className="dashboard__action-btn">
+                        {coupon.isActive ? 'Deactivate' : 'Activate'}
+                      </button>
+                      <button disabled={isBusy} onClick={() => handleDelete(coupon._id)} className="dashboard__action-btn dashboard__action-btn--danger">
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,14 +1,16 @@
+const Coupon = require('../models/Coupon');
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const logActivity = require('../utils/logActivity');
+const validateCouponLogic = require('../utils/validateCouponLogic');
 
 
 // @desc   Create a new order from the user's cart
 // @route  POST /api/orders
 const createOrder = async (req, res) => {
   try {
-    const { shippingAddress, paymentMethod } = req.body;
+    const { shippingAddress, paymentMethod, couponCode} = req.body;
 
     if (
       !shippingAddress ||
@@ -57,7 +59,23 @@ const createOrder = async (req, res) => {
     }
 
     const shippingFee = 60; // flat rate for now — can be dynamic later
-    const totalAmount = itemsTotal + shippingFee;
+
+    // Re-validate and recalculate the discount server-side — never trust
+    // the discount amount sent from the frontend
+    let appliedDiscount = 0;
+    let appliedCouponCode = undefined;
+
+    if (couponCode) {
+      try {
+        const couponResult = await validateCouponLogic(couponCode, itemsTotal, req.user._id);
+        appliedDiscount = couponResult.discountAmount;
+        appliedCouponCode = couponResult.code;
+      } catch (couponError) {
+        return res.status(400).json({ message: couponError.message });
+      }
+    }
+
+    const totalAmount = itemsTotal + shippingFee - appliedDiscount;
 
     // 3. Create the order
     const order = await Order.create({
@@ -67,8 +85,15 @@ const createOrder = async (req, res) => {
       paymentMethod: paymentMethod || 'cod',
       itemsTotal,
       shippingFee,
+      discountAmount: appliedDiscount,
+      couponCode: appliedCouponCode,
       totalAmount,
     });
+
+    // Increment the coupon's usage count if one was applied
+    if (appliedCouponCode) {
+      await Coupon.findOneAndUpdate({ code: appliedCouponCode }, { $inc: { usedCount: 1 } });
+    }
 
     // 4. Reduce stock for each product
     for (const item of orderItems) {

@@ -702,3 +702,34 @@
     grid-template-columns: 1fr;
   }
 }
+
+.coupon-form {
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.coupon-form__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+}
+
+.coupon-form__row input,
+.coupon-form__row select {
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+}
+
+@media (max-width: 700px) {
+  .coupon-form__row {
+    grid-template-columns: 1fr;
+  }
+}
