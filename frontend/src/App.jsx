@@ -18,12 +18,21 @@ import Profile from './pages/Profile';
 import BecomeSeller from './pages/BecomeSeller';
 import Footer from './components/Footer';
 
+import { useState } from 'react';
+import MobileMenuDrawer from './components/MobileMenuDrawer';
+import MobileBottomNav from './components/MobileBottomNav';
+import MobileSearchOverlay from './components/MobileSearchOverlay';
+
 function App() {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
   return (
     <div>
       <TopBar />
       <Header />
       <CategoryNav />
+
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
@@ -31,7 +40,10 @@ function App() {
         <Route path="/products/:id" element={<ProductDetail />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/checkout" element={<Checkout />} />
-        <Route path="/order-confirmation/:id" element={<OrderConfirmation />} />
+        <Route
+          path="/order-confirmation/:id"
+          element={<OrderConfirmation />}
+        />
         <Route path="/orders" element={<OrderHistory />} />
         <Route path="/seller/dashboard" element={<SellerDashboard />} />
         <Route path="/seller/products/new" element={<AddProduct />} />
@@ -41,7 +53,24 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/become-seller" element={<BecomeSeller />} />
       </Routes>
+
       <Footer />
+
+      {/* Mobile Navigation Components */}
+      <MobileMenuDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+      />
+
+      <MobileSearchOverlay
+        isOpen={mobileSearchOpen}
+        onClose={() => setMobileSearchOpen(false)}
+      />
+
+      <MobileBottomNav
+        onOpenMenu={() => setDrawerOpen(true)}
+        onOpenSearch={() => setMobileSearchOpen(true)}
+      />
     </div>
   );
 }

@@ -224,28 +224,28 @@
 
 @media (max-width: 850px) {
   .site-header__inner {
-    flex-wrap: wrap;
+    padding: 10px var(--space-md);
     gap: var(--space-sm);
-    padding: 12px var(--space-md);
   }
-  .site-header__search {
-    order: 3;
-    max-width: 100%;
-    flex-basis: 100%;
-  }
-  .site-header__action span {
+
+  .site-header__search-wrap {
     display: none;
   }
-  .site-header__actions {
-    gap: var(--space-sm);
-    flex-shrink: 0;
+
+  .site-header__actions .site-header__action:not(.site-header__account button) {
+    display: none;
   }
-  .site-header__auth-buttons {
-    gap: var(--space-sm);
+
+  .site-header__actions > a.site-header__action {
+    display: none;
   }
-  .site-header__logo {
-    flex-shrink: 0;
-    font-size: 20px;
+
+  .site-header__account {
+    margin-left: auto;
+  }
+
+  .site-header__account button span {
+    display: none;
   }
 }
 

@@ -47,3 +47,9 @@
   font-weight: 700;
   color: var(--color-ink);
 }
+
+@media (max-width: 850px) {
+  .category-nav {
+    display: none;
+  }
+}
