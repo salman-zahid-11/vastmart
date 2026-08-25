@@ -15,6 +15,7 @@ import { getAllBanners, createBanner, toggleBanner, deleteBanner } from '../serv
 import { getAllCoupons, createCoupon, toggleCoupon, deleteCoupon } from '../services/couponService';
 import { useAuth } from '../context/AuthContext';
 import { updateAdminLevel } from '../services/adminService';
+import { getAbandonedActivity } from '../services/activityService';
 import './AdminDashboard.css';
 
 
@@ -43,6 +44,7 @@ function AdminDashboard() {
     { id: 'users', label: 'Users' },
     { id: 'products', label: 'Products' },
     { id: 'orders', label: 'Orders' },
+    { id: 'abandoned', label: 'Abandoned Interest' },
     { id: 'activity', label: 'Activity Log' },
   ];
   const SECTIONS = ALL_SECTIONS.filter((s) => !s.superOnly || isSuperAdmin);
@@ -57,6 +59,7 @@ function AdminDashboard() {
   const [notices, setNotices] = useState([]);
   const [banners, setBanners] = useState([]);
   const [coupons, setCoupons] = useState([]);
+  const [abandoned, setAbandoned] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -68,7 +71,7 @@ function AdminDashboard() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [statsData, productsData, usersData, ordersData, applicationsData, noticesData, activityData] = await Promise.all([
+      const [statsData, productsData, usersData, ordersData, applicationsData, noticesData, activityData, abandonedData] = await Promise.all([
         getDashboardStats(),
         getAllProductsAdmin(),
         getAllUsers(),
@@ -84,7 +87,7 @@ function AdminDashboard() {
       setApplications(applicationsData);
       setNotices(noticesData);
       setActivity(activityData);
-
+      setAbandoned(abandonedData);
       // Only super admins can access these — fetch separately so a 403 here
       // never breaks the rest of the dashboard for moderators
       if (isSuperAdmin) {
@@ -142,6 +145,7 @@ function AdminDashboard() {
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
         {activeSection === 'banners' && <BannersSection banners={banners} setBanners={setBanners} />}
         {activeSection === 'coupons' && <CouponsSection coupons={coupons} setCoupons={setCoupons} />}
+        {activeSection === 'abandoned' && <AbandonedSection abandoned={abandoned} />}
         {activeSection === 'manage-admins' && <ManageAdminsSection users={users} setUsers={setUsers} />}
       </main>
     </div>
@@ -1279,6 +1283,65 @@ function ManageAdminsSection({ users, setUsers }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+
+/* ===== Abandoned Interest ===== */
+function AbandonedSection({ abandoned }) {
+  const viewedOnly = abandoned.filter((a) => a.action === 'viewed');
+  const cartOnly = abandoned.filter((a) => a.action === 'added_to_cart');
+
+  return (
+    <div>
+      <h2 className="admin-content__title">Abandoned Interest</h2>
+      <p className="admin-content__subtitle">
+        Logged-in customers who viewed or added a product to cart but never completed the order.
+      </p>
+
+      <div className="admin-stats" style={{ marginBottom: 'var(--space-xl)' }}>
+        <StatCard label="Viewed, no purchase" value={viewedOnly.length} />
+        <StatCard label="In cart, no purchase" value={cartOnly.length} warn={cartOnly.length > 0} />
+      </div>
+
+      {abandoned.length === 0 ? (
+        <div className="dashboard__empty"><p>No missed opportunities right now — nice.</p></div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Customer</th>
+                <th>Contact</th>
+                <th>Product</th>
+                <th>Action</th>
+                <th>When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {abandoned.map((entry) => (
+                <tr key={entry._id}>
+                  <td className="admin-table__name">{entry.user?.name || 'Unknown'}</td>
+                  <td>
+                    <div style={{ fontSize: '12.5px' }}>{entry.user?.email}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--color-ink-faint)' }}>{entry.user?.phone || '—'}</div>
+                  </td>
+                  <td>{entry.product?.name || 'Unknown product'}</td>
+                  <td>
+                    <span className={`pill pill--${entry.action === 'added_to_cart' ? 'pending' : 'success'}`}>
+                      {entry.action === 'added_to_cart' ? 'In Cart' : 'Viewed'}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: '12.5px', color: 'var(--color-ink-faint)' }}>
+                    {new Date(entry.createdAt).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

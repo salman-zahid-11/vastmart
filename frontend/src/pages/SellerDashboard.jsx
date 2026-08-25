@@ -2,20 +2,27 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyProducts } from '../services/productService';
 import { getMySales } from '../services/orderService';
+import { getAbandonedActivity } from '../services/activityService';
 import './Dashboard.css';
 
 function SellerDashboard() {
   const [products, setProducts] = useState([]);
   const [sales, setSales] = useState([]);
+  const [abandoned, setAbandoned] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsData, salesData] = await Promise.all([getMyProducts(), getMySales()]);
+        const [productsData, salesData, abandonedData] = await Promise.all([
+          getMyProducts(),
+          getMySales(),
+          getAbandonedActivity(),
+        ]);
         setProducts(productsData);
         setSales(salesData);
+        setAbandoned(abandonedData);
       } catch (err) {
         setError('Failed to load dashboard data');
       } finally {
@@ -54,47 +61,47 @@ function SellerDashboard() {
 
       <div className="dashboard__section">
         <h3>My Products</h3>
-              {products.length === 0 ? (
-        <div className="dashboard__empty">
-          <p>You haven't listed any products yet.</p>
-          <Link to="/seller/products/new">Add your first product →</Link>
-        </div>
-      ) : (
-        <div className="dashboard__table-wrap">
-          <table className="dashboard__table">
-            <thead>
-              <tr>
-                <th>Product</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((product) => (
-                <tr key={product._id}>
-                  <td className="dashboard__table-name">{product.name}</td>
-                  <td className="dashboard__table-mono">৳{product.price}</td>
-                  <td className="dashboard__table-mono">{product.stock}</td>
-                  <td>
-                    {product.isApproved ? (
-                      <span className="pill pill--success">Approved</span>
-                    ) : (
-                      <span className="pill pill--pending">Pending</span>
-                    )}
-                  </td>
-                  <td>
-                    <Link to={`/seller/products/edit/${product._id}`} className="dashboard__action-btn">
-                      Edit
-                    </Link>
-                  </td>
+        {products.length === 0 ? (
+          <div className="dashboard__empty">
+            <p>You haven't listed any products yet.</p>
+            <Link to="/seller/products/new">Add your first product →</Link>
+          </div>
+        ) : (
+          <div className="dashboard__table-wrap">
+            <table className="dashboard__table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+              </thead>
+              <tbody>
+                {products.map((product) => (
+                  <tr key={product._id}>
+                    <td className="dashboard__table-name">{product.name}</td>
+                    <td className="dashboard__table-mono">৳{product.price}</td>
+                    <td className="dashboard__table-mono">{product.stock}</td>
+                    <td>
+                      {product.isApproved ? (
+                        <span className="pill pill--success">Approved</span>
+                      ) : (
+                        <span className="pill pill--pending">Pending</span>
+                      )}
+                    </td>
+                    <td>
+                      <Link to={`/seller/products/edit/${product._id}`} className="dashboard__action-btn">
+                        Edit
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="dashboard__section">
@@ -124,6 +131,43 @@ function SellerDashboard() {
                     </td>
                     <td className="dashboard__table-mono">
                       ৳{order.items.reduce((s, item) => s + item.price * item.quantity, 0)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="dashboard__section">
+        <h3>Missed Opportunities</h3>
+        <p style={{ fontSize: '13px', color: 'var(--color-ink-muted)', marginBottom: 'var(--space-md)' }}>
+          Customers who viewed or added your products to cart but didn't buy — worth a follow-up.
+        </p>
+        {abandoned.length === 0 ? (
+          <div className="dashboard__empty"><p>No missed opportunities right now.</p></div>
+        ) : (
+          <div className="dashboard__table-wrap">
+            <table className="dashboard__table">
+              <thead>
+                <tr>
+                  <th>Customer</th>
+                  <th>Contact</th>
+                  <th>Product</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {abandoned.map((entry) => (
+                  <tr key={entry._id}>
+                    <td className="dashboard__table-name">{entry.user?.name || 'Unknown'}</td>
+                    <td style={{ fontSize: '13px' }}>{entry.user?.email}</td>
+                    <td>{entry.product?.name}</td>
+                    <td>
+                      <span className={`pill ${entry.action === 'added_to_cart' ? 'pill--pending' : 'pill--success'}`}>
+                        {entry.action === 'added_to_cart' ? 'In Cart' : 'Viewed'}
+                      </span>
                     </td>
                   </tr>
                 ))}

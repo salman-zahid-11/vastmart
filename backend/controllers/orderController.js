@@ -4,6 +4,7 @@ const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 const logActivity = require('../utils/logActivity');
 const validateCouponLogic = require('../utils/validateCouponLogic');
+const VisitorActivity = require('../models/VisitorActivity');
 
 
 // @desc   Create a new order from the user's cart
@@ -101,6 +102,14 @@ const createOrder = async (req, res) => {
         $inc: { stock: -item.quantity },
       });
     }
+
+        // Mark this user's prior view/cart activity on these products as converted
+    // so they no longer show up as "abandoned"
+    const productIds = orderItems.map((item) => item.product);
+    await VisitorActivity.updateMany(
+      { user: req.user._id, product: { $in: productIds }, converted: false },
+      { $set: { converted: true } }
+    );
 
     // 5. Clear the cart
     cart.items = [];

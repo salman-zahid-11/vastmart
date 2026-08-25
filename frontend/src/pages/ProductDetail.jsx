@@ -4,6 +4,7 @@ import { getProductById } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import ImageGallery from '../components/ImageGallery';
+import { trackActivity } from '../services/activityService';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -23,6 +24,7 @@ function ProductDetail() {
       try {
         const data = await getProductById(id);
         setProduct(data);
+        trackActivity(id, 'viewed');
       } catch (err) {
         setError('Product not found');
       } finally {
@@ -43,6 +45,7 @@ function ProductDetail() {
     setMessage('');
     try {
       await addItem(product._id, 1);
+      trackActivity(product._id, 'added_to_cart');
       setMessage('Added to cart!');
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed to add to cart');
@@ -61,6 +64,7 @@ function ProductDetail() {
     setMessage('');
     try {
       await addItem(product._id, 1);
+      trackActivity(product._id, 'added_to_cart');
       navigate('/checkout');
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed to proceed to checkout');
