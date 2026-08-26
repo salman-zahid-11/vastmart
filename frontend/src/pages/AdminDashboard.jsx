@@ -16,6 +16,14 @@ import { getAllCoupons, createCoupon, toggleCoupon, deleteCoupon } from '../serv
 import { useAuth } from '../context/AuthContext';
 import { updateAdminLevel } from '../services/adminService';
 import { getAbandonedActivity } from '../services/activityService';
+import {
+  getAllCategories,
+  createCategory,
+  addSubCategory,
+  removeSubCategory,
+  toggleCategory,
+  deleteCategory,
+} from '../services/categoryService';
 import './AdminDashboard.css';
 
 
@@ -46,6 +54,7 @@ function AdminDashboard() {
     { id: 'orders', label: 'Orders' },
     { id: 'abandoned', label: 'Abandoned Interest' },
     { id: 'activity', label: 'Activity Log' },
+    { id: 'categories', label: 'Categories' },
   ];
   const SECTIONS = ALL_SECTIONS.filter((s) => !s.superOnly || isSuperAdmin);
   const [activeSection, setActiveSection] = useState('overview');
@@ -60,6 +69,7 @@ function AdminDashboard() {
   const [banners, setBanners] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [abandoned, setAbandoned] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -148,11 +158,156 @@ function AdminDashboard() {
         {activeSection === 'coupons' && <CouponsSection coupons={coupons} setCoupons={setCoupons} />}
         {activeSection === 'abandoned' && <AbandonedSection abandoned={abandoned} />}
         {activeSection === 'manage-admins' && <ManageAdminsSection users={users} setUsers={setUsers} />}
+        {activeSection === 'categories' && <CategoriesSection categories={categories} setCategories={setCategories} />}
       </main>
     </div>
   );
 }
 
+
+/* ===== Categories ===== */
+function CategoriesSection({ categories, setCategories }) {
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newSubCategoryInputs, setNewSubCategoryInputs] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const created = await createCategory(newCategoryName.trim());
+      setCategories([...categories, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setNewCategoryName('');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to create category');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAddSub = async (categoryId) => {
+    const value = newSubCategoryInputs[categoryId]?.trim();
+    if (!value) return;
+    setBusyId(categoryId);
+    try {
+      const updated = await addSubCategory(categoryId, value);
+      setCategories(categories.map((c) => (c._id === categoryId ? updated : c)));
+      setNewSubCategoryInputs({ ...newSubCategoryInputs, [categoryId]: '' });
+    } catch (err) {
+      console.error('Failed to add sub-category', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleRemoveSub = async (categoryId, subCategory) => {
+    setBusyId(categoryId);
+    try {
+      const updated = await removeSubCategory(categoryId, subCategory);
+      setCategories(categories.map((c) => (c._id === categoryId ? updated : c)));
+    } catch (err) {
+      console.error('Failed to remove sub-category', err);
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleToggle = async (id) => {
+    setBusyId(id);
+    try {
+      const updated = await toggleCategory(id);
+      setCategories(categories.map((c) => (c._id === id ? updated : c)));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setBusyId(id);
+    try {
+      await deleteCategory(id);
+      setCategories(categories.filter((c) => c._id !== id));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div>
+      <h2 className="admin-content__title">Categories</h2>
+      <p className="admin-content__subtitle">Manage the categories and sub-categories sellers can choose from.</p>
+
+      <form onSubmit={handleCreateCategory} className="notice-form">
+        {error && <p className="checkout-form__error" style={{ flexBasis: '100%' }}>{error}</p>}
+        <input
+          type="text"
+          value={newCategoryName}
+          onChange={(e) => setNewCategoryName(e.target.value)}
+          placeholder="e.g. Toys & Games"
+        />
+        <button type="submit" disabled={submitting || !newCategoryName.trim()} className="dashboard__cta">
+          {submitting ? 'Adding...' : 'Add Category'}
+        </button>
+      </form>
+
+      {categories.length === 0 ? (
+        <div className="dashboard__empty"><p>No categories yet.</p></div>
+      ) : (
+        <div className="category-list">
+          {categories.map((category) => {
+            const isBusy = busyId === category._id;
+            return (
+              <div key={category._id} className="category-card" style={{ opacity: isBusy ? 0.5 : 1 }}>
+                <div className="category-card__header">
+                  <span className={`pill pill--${category.isActive ? 'success' : 'pending'}`}>
+                    {category.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                  <h4>{category.name}</h4>
+                  <div className="category-card__header-actions">
+                    <button disabled={isBusy} onClick={() => handleToggle(category._id)} className="dashboard__action-btn">
+                      {category.isActive ? 'Deactivate' : 'Activate'}
+                    </button>
+                    <button disabled={isBusy} onClick={() => handleDelete(category._id)} className="dashboard__action-btn dashboard__action-btn--danger">
+                      Delete
+                    </button>
+                  </div>
+                </div>
+
+                <div className="category-card__subs">
+                  {category.subCategories.map((sub) => (
+                    <span key={sub} className="category-card__sub-tag">
+                      {sub}
+                      <button onClick={() => handleRemoveSub(category._id, sub)}>×</button>
+                    </span>
+                  ))}
+                  {category.subCategories.length === 0 && (
+                    <span style={{ fontSize: '12.5px', color: 'var(--color-ink-faint)' }}>No sub-categories yet</span>
+                  )}
+                </div>
+
+                <div className="category-card__add-sub">
+                  <input
+                    type="text"
+                    value={newSubCategoryInputs[category._id] || ''}
+                    onChange={(e) => setNewSubCategoryInputs({ ...newSubCategoryInputs, [category._id]: e.target.value })}
+                    placeholder="Add sub-category..."
+                  />
+                  <button disabled={isBusy} onClick={() => handleAddSub(category._id)} className="dashboard__action-btn">
+                    Add
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 
 /* ===== Overview ===== */

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { createProduct, updateProduct, getProductById, getCategories, getSubCategories } from '../services/productService';
+import { createProduct, updateProduct, getProductById } from '../services/productService';
+import { getActiveCategories } from '../services/categoryService';
 import './AddProduct.css';
 
 const MAX_IMAGES = 5;
@@ -53,16 +54,19 @@ function AddProduct() {
       .finally(() => setPageLoading(false));
   }, [id, isEditMode]);
 
-    useEffect(() => {
-    getCategories().then(setCategoryOptions).catch(() => setCategoryOptions([]));
+  const [allCategories, setAllCategories] = useState([]);
+
+  useEffect(() => {
+    getActiveCategories().then((cats) => {
+      setAllCategories(cats);
+      setCategoryOptions(cats.map((c) => c.name));
+    }).catch(() => setAllCategories([]));
   }, []);
-    useEffect(() => {
-    if (formData.category) {
-      getSubCategories(formData.category).then(setSubCategoryOptions).catch(() => setSubCategoryOptions([]));
-    } else {
-      setSubCategoryOptions([]);
-    }
-  }, [formData.category]);
+
+  useEffect(() => {
+    const match = allCategories.find((c) => c.name.toLowerCase() === formData.category.toLowerCase());
+    setSubCategoryOptions(match ? match.subCategories : []);
+  }, [formData.category, allCategories]);
 
 
   const totalImageCount = existingImages.length + newImages.length;
