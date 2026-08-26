@@ -33,3 +33,8 @@ export const updateProduct = async (id, formData) => {
   });
   return response.data;
 };
+
+export const getSubCategories = async (category) => {
+  const response = await api.get('/products/subcategories', { params: category ? { category } : {} });
+  return response.data;
+};

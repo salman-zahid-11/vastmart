@@ -192,7 +192,22 @@ const getCategories = async (req, res) => {
   }
 };
 
+// @desc   Get distinct sub-categories, optionally filtered by category
+// @route  GET /api/products/subcategories?category=Electronics
+const getSubCategories = async (req, res) => {
+  try {
+    const { category } = req.query;
+    const filter = { isApproved: true, isActive: true, subCategory: { $nin: [null, ''] } };
+    if (category) {
+      filter.category = { $regex: `^${category}$`, $options: 'i' };
+    }
 
+    const subCategories = await Product.distinct('subCategory', filter);
+    res.status(200).json(subCategories);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
 
 // @desc   Get a single product by ID
 // @route  GET /api/products/:id
@@ -262,4 +277,4 @@ const approveProduct = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories, updateProduct };
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories, getSubCategories, updateProduct };

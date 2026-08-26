@@ -224,3 +224,16 @@
   color: var(--color-success);
   font-weight: 600;
 }
+
+.checkout-form__combo-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkout-form__combo-back {
+  font-size: 12px;
+  color: var(--color-primary);
+  font-weight: 600;
+  text-align: left;
+}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { createProduct, updateProduct, getProductById } from '../services/productService';
+import { createProduct, updateProduct, getProductById, getCategories, getSubCategories } from '../services/productService';
 import './AddProduct.css';
 
 const MAX_IMAGES = 5;
@@ -27,6 +28,10 @@ function AddProduct() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(isEditMode);
+  const [categoryOptions, setCategoryOptions] = useState([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
+  const [categoryMode, setCategoryMode] = useState('select'); // 'select' | 'custom'
+  const [subCategoryMode, setSubCategoryMode] = useState('select');
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -48,6 +53,18 @@ function AddProduct() {
       .catch(() => setError('Failed to load product'))
       .finally(() => setPageLoading(false));
   }, [id, isEditMode]);
+
+    useEffect(() => {
+    getCategories().then(setCategoryOptions).catch(() => setCategoryOptions([]));
+  }, []);
+    useEffect(() => {
+    if (formData.category) {
+      getSubCategories(formData.category).then(setSubCategoryOptions).catch(() => setSubCategoryOptions([]));
+    } else {
+      setSubCategoryOptions([]);
+    }
+  }, [formData.category]);
+
 
   const totalImageCount = existingImages.length + newImages.length;
 
@@ -220,13 +237,81 @@ function AddProduct() {
           <div className="checkout-form__row">
             <div className="checkout-form__field">
               <label>Category</label>
-              <input type="text" name="category" value={formData.category} onChange={handleChange} required />
+              {categoryMode === 'select' ? (
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={(e) => {
+                    if (e.target.value === '__custom__') {
+                      setCategoryMode('custom');
+                      setFormData({ ...formData, category: '' });
+                    } else {
+                      handleChange(e);
+                    }
+                  }}
+                  required
+                >
+                  <option value="">Select a category...</option>
+                  {categoryOptions.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                  <option value="__custom__">+ Add a new category</option>
+                </select>
+              ) : (
+                <div className="checkout-form__combo-row">
+                  <input
+                    type="text"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    placeholder="Type new category name"
+                    required
+                  />
+                  <button type="button" onClick={() => setCategoryMode('select')} className="checkout-form__combo-back">
+                    ← Choose existing
+                  </button>
+                </div>
+              )}
             </div>
+
             <div className="checkout-form__field">
               <label>Sub-category</label>
-              <input type="text" name="subCategory" value={formData.subCategory} onChange={handleChange} placeholder="Optional" />
+              {subCategoryMode === 'select' ? (
+                <select
+                  name="subCategory"
+                  value={formData.subCategory}
+                  onChange={(e) => {
+                    if (e.target.value === '__custom__') {
+                      setSubCategoryMode('custom');
+                      setFormData({ ...formData, subCategory: '' });
+                    } else {
+                      handleChange(e);
+                    }
+                  }}
+                >
+                  <option value="">None</option>
+                  {subCategoryOptions.map((sub) => (
+                    <option key={sub} value={sub}>{sub}</option>
+                  ))}
+                  <option value="__custom__">+ Add a new sub-category</option>
+                </select>
+              ) : (
+                <div className="checkout-form__combo-row">
+                  <input
+                    type="text"
+                    name="subCategory"
+                    value={formData.subCategory}
+                    onChange={handleChange}
+                    placeholder="Type new sub-category"
+                  />
+                  <button type="button" onClick={() => setSubCategoryMode('select')} className="checkout-form__combo-back">
+                    ← Choose existing
+                  </button>
+                </div>
+              )}
             </div>
           </div>
+          
 
           <div className="checkout-form__row">
             <div className="checkout-form__field">
