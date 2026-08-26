@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { createProduct, updateProduct, getProductById } from '../services/productService';
 import { createProduct, updateProduct, getProductById, getCategories, getSubCategories } from '../services/productService';
 import './AddProduct.css';
 
@@ -311,7 +310,7 @@ function AddProduct() {
               )}
             </div>
           </div>
-          
+
 
           <div className="checkout-form__row">
             <div className="checkout-form__field">
