@@ -12,14 +12,15 @@ const {
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
+const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiters');
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+router.post('/register', authLimiter, registerUser);
+router.post('/login', authLimiter, loginUser);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/profile/avatar', protect, upload.single('avatar'), updateAvatar);
-router.post('/forgot-password', forgotPassword);
-router.post('/verify-reset-code', verifyResetCode);
-router.post('/reset-password', resetPassword);
+router.post('/forgot-password', passwordResetLimiter, forgotPassword);
+router.post('/verify-reset-code', authLimiter, verifyResetCode);
+router.post('/reset-password', authLimiter, resetPassword);
 
 module.exports = router;
