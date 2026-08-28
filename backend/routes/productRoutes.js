@@ -20,7 +20,6 @@ router.get('/seller/my-products', protect, authorizeRoles('seller', 'admin'), ge
 router.get('/admin/all', protect, authorizeRoles('admin'), getAllProductsAdmin);
 router.put('/admin/:id/approve', protect, authorizeRoles('admin'), approveProduct);
 router.put('/:id', protect, authorizeRoles('seller', 'admin'), upload.array('images', 5), updateProduct);
-router.get('/subcategories', getSubCategories);
 router.get('/:id', getProductById);
 router.post('/', protect, authorizeRoles('seller', 'admin'), upload.array('images', 5), productValidation, createProduct);
 
