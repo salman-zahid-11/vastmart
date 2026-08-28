@@ -46,6 +46,9 @@ const registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      adminLevel: user.adminLevel,
+      avatar: user.avatar,
+      token: generateToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
