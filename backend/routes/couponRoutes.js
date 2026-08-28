@@ -8,10 +8,11 @@ const {
   deleteCoupon,
 } = require('../controllers/couponController');
 const { protect, authorizeRoles, requireSuperAdmin } = require('../middleware/authMiddleware');
+const { couponValidation } = require('../middleware/validators');
 
 router.post('/validate', protect, validateCoupon);
 router.get('/', protect, authorizeRoles('admin'), getAllCoupons);
-router.post('/', protect, authorizeRoles('admin'), requireSuperAdmin, createCoupon);
+router.post('/', protect, authorizeRoles('admin'), requireSuperAdmin, couponValidation, createCoupon);
 router.put('/:id/toggle', protect, authorizeRoles('admin'), requireSuperAdmin, toggleCoupon);
 router.delete('/:id', protect, authorizeRoles('admin'), requireSuperAdmin, deleteCoupon);
 

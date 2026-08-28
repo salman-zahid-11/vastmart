@@ -16,6 +16,7 @@ const couponRoutes = require('./routes/couponRoutes');
 const visitorActivityRoutes = require('./routes/visitorActivityRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const { generalLimiter } = require('./middleware/rateLimiters');
+const sanitizeMiddleware = require('./middleware/sanitize');
 
 connectDB();
 
@@ -31,6 +32,7 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+app.use(sanitizeMiddleware);
 app.use(generalLimiter);
 
 app.use('/uploads', express.static('public/uploads'));

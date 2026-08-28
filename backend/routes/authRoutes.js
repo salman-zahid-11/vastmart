@@ -13,9 +13,10 @@ const {
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 const { authLimiter, passwordResetLimiter } = require('../middleware/rateLimiters');
+const { registerValidation, loginValidation } = require('../middleware/validators');
 
-router.post('/register', authLimiter, registerUser);
-router.post('/login', authLimiter, loginUser);
+router.post('/register', authLimiter, registerValidation, registerUser);
+router.post('/login', authLimiter, loginValidation, loginUser);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/profile/avatar', protect, upload.single('avatar'), updateAvatar);

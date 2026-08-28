@@ -12,6 +12,7 @@ const {
 } = require('../controllers/productController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
+const { productValidation } = require('../middleware/validators');
 
 router.get('/', getProducts);
 router.get('/categories', getCategories);
@@ -21,8 +22,7 @@ router.put('/admin/:id/approve', protect, authorizeRoles('admin'), approveProduc
 router.put('/:id', protect, authorizeRoles('seller', 'admin'), upload.array('images', 5), updateProduct);
 router.get('/subcategories', getSubCategories);
 router.get('/:id', getProductById);
-router.post('/', protect, authorizeRoles('seller', 'admin'), upload.array('images', 5), createProduct);
-
+router.post('/', protect, authorizeRoles('seller', 'admin'), upload.array('images', 5), productValidation, createProduct);
 
 
 module.exports = router;
