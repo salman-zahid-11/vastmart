@@ -17,6 +17,7 @@ const visitorActivityRoutes = require('./routes/visitorActivityRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
 const { generalLimiter } = require('./middleware/rateLimiters');
 const sanitizeMiddleware = require('./middleware/sanitize');
+const helmet = require('helmet');
 
 connectDB();
 
@@ -30,6 +31,9 @@ const allowedOrigins = [
 app.use(cors({
   origin: allowedOrigins,
   credentials: true,
+}));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' }, // allows Cloudinary images to load properly
 }));
 app.use(express.json());
 app.use(sanitizeMiddleware);
