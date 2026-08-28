@@ -7,17 +7,67 @@ const ActivityLog = require('../models/ActivityLog');
 // @route  GET /api/admin/stats
 const getDashboardStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments({ role: 'customer' });
-    const totalSellers = await User.countDocuments({ role: 'seller' });
-    const totalProducts = await Product.countDocuments({});
-    const pendingProducts = await Product.countDocuments({ isApproved: false });
-        const totalOrders = await Order.countDocuments({});
+    const Coupon = require('../models/Coupon');
+    const Category = require('../models/Category');
+    const Notice = require('../models/Notice');
+    const Banner = require('../models/Banner');
+    const SellerApplication = require('../models/SellerApplication');
+    const VisitorActivity = require('../models/VisitorActivity');
 
-    const revenueOrders = await Order.find({ orderStatus: { $ne: 'cancelled' } });
+    const [
+      totalCustomers,
+      totalSellers,
+      totalAdmins,
+      totalProducts,
+      pendingProducts,
+      totalOrders,
+      pendingOrders,
+      deliveredOrders,
+      cancelledOrders,
+      totalCategories,
+      activeCoupons,
+      activeNotices,
+      activeBanners,
+      pendingApplications,
+      revenueOrders,
+      abandonedCount,
+    ] = await Promise.all([
+      User.countDocuments({ role: 'customer' }),
+      User.countDocuments({ role: 'seller' }),
+      User.countDocuments({ role: 'admin' }),
+      Product.countDocuments({}),
+      Product.countDocuments({ isApproved: false }),
+      Order.countDocuments({}),
+      Order.countDocuments({ orderStatus: { $in: ['placed', 'processing'] } }),
+      Order.countDocuments({ orderStatus: 'delivered' }),
+      Order.countDocuments({ orderStatus: 'cancelled' }),
+      Category.countDocuments({ isActive: true }),
+      Coupon.countDocuments({ isActive: true }),
+      Notice.countDocuments({ isActive: true }),
+      Banner.countDocuments({ isActive: true }),
+      SellerApplication.countDocuments({ status: 'pending' }),
+      Order.find({ orderStatus: { $ne: 'cancelled' } }),
+      VisitorActivity.countDocuments({ converted: false, user: { $ne: null } }),
+    ]);
+
     const totalRevenue = revenueOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+    const avgOrderValue = revenueOrders.length > 0 ? Math.round(totalRevenue / revenueOrders.length) : 0;
 
     res.status(200).json({
-      totalUsers,
+      users: { customers: totalCustomers, sellers: totalSellers, admins: totalAdmins },
+      products: { total: totalProducts, pending: pendingProducts },
+      orders: {
+        total: totalOrders,
+        pending: pendingOrders,
+        delivered: deliveredOrders,
+        cancelled: cancelledOrders,
+      },
+      revenue: { total: totalRevenue, avgOrderValue },
+      catalog: { categories: totalCategories, activeCoupons, activeNotices, activeBanners },
+      applications: { pending: pendingApplications },
+      abandoned: { count: abandonedCount },
+      // kept for backward compatibility with any older frontend code still reading flat fields
+      totalUsers: totalCustomers,
       totalSellers,
       totalProducts,
       pendingProducts,
@@ -25,6 +75,7 @@ const getDashboardStats = async (req, res) => {
       totalRevenue,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };

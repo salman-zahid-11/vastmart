@@ -312,17 +312,93 @@ function CategoriesSection({ categories, setCategories }) {
 
 /* ===== Overview ===== */
 function OverviewSection({ stats }) {
+  // Support both the new nested shape and a possible flat fallback
+  const users = stats.users || {};
+  const products = stats.products || {};
+  const orders = stats.orders || {};
+  const revenue = stats.revenue || {};
+  const catalog = stats.catalog || {};
+  const applications = stats.applications || {};
+  const abandoned = stats.abandoned || {};
+
   return (
     <div>
       <h2 className="admin-content__title">Platform Overview</h2>
-      <div className="admin-stats">
-        <StatCard label="Customers" value={stats.totalUsers} />
-        <StatCard label="Sellers" value={stats.totalSellers} />
-        <StatCard label="Total Products" value={stats.totalProducts} />
-        <StatCard label="Pending Approval" value={stats.pendingProducts} warn={stats.pendingProducts > 0} />
-        <StatCard label="Total Orders" value={stats.totalOrders} />
-        <StatCard label="Revenue" value={`৳${stats.totalRevenue.toLocaleString()}`} accent />
+      <p className="admin-content__subtitle">A snapshot of everything happening on VastMart right now.</p>
+
+      <div className="overview-hero">
+        <div className="overview-hero__main">
+          <p className="overview-hero__label">Total Revenue</p>
+          <p className="overview-hero__value">৳{(revenue.total || 0).toLocaleString()}</p>
+          <p className="overview-hero__sub">Avg. order value: ৳{revenue.avgOrderValue || 0}</p>
+        </div>
+        <div className="overview-hero__side">
+          <div>
+            <p className="overview-hero__side-value">{orders.total || 0}</p>
+            <p className="overview-hero__side-label">Total Orders</p>
+          </div>
+          <div>
+            <p className="overview-hero__side-value">{orders.delivered || 0}</p>
+            <p className="overview-hero__side-label">Delivered</p>
+          </div>
+          <div>
+            <p className="overview-hero__side-value">{orders.pending || 0}</p>
+            <p className="overview-hero__side-label">In Progress</p>
+          </div>
+        </div>
       </div>
+
+      <div className="overview-grid">
+        <OverviewGroup title="People">
+          <MiniStat label="Customers" value={users.customers} />
+          <MiniStat label="Sellers" value={users.sellers} />
+          <MiniStat label="Admins" value={users.admins} />
+        </OverviewGroup>
+
+        <OverviewGroup title="Catalog">
+          <MiniStat label="Products" value={products.total} />
+          <MiniStat label="Pending Approval" value={products.pending} warn={products.pending > 0} />
+          <MiniStat label="Categories" value={catalog.categories} />
+        </OverviewGroup>
+
+        <OverviewGroup title="Orders">
+          <MiniStat label="Delivered" value={orders.delivered} good />
+          <MiniStat label="Pending" value={orders.pending} />
+          <MiniStat label="Cancelled" value={orders.cancelled} warn={orders.cancelled > 0} />
+        </OverviewGroup>
+
+        <OverviewGroup title="Marketing">
+          <MiniStat label="Active Coupons" value={catalog.activeCoupons} />
+          <MiniStat label="Active Notices" value={catalog.activeNotices} />
+          <MiniStat label="Active Banners" value={catalog.activeBanners} />
+        </OverviewGroup>
+
+        <OverviewGroup title="Needs Attention">
+          <MiniStat label="Seller Applications" value={applications.pending} warn={applications.pending > 0} />
+          <MiniStat label="Products Pending" value={products.pending} warn={products.pending > 0} />
+          <MiniStat label="Abandoned Carts" value={abandoned.count} warn={abandoned.count > 0} />
+        </OverviewGroup>
+      </div>
+    </div>
+  );
+}
+
+function OverviewGroup({ title, children }) {
+  return (
+    <div className="overview-group">
+      <h4 className="overview-group__title">{title}</h4>
+      <div className="overview-group__stats">{children}</div>
+    </div>
+  );
+}
+
+function MiniStat({ label, value, warn, good }) {
+  return (
+    <div className="mini-stat">
+      <span className={`mini-stat__value ${warn ? 'mini-stat__value--warn' : ''} ${good ? 'mini-stat__value--good' : ''}`}>
+        {value ?? 0}
+      </span>
+      <span className="mini-stat__label">{label}</span>
     </div>
   );
 }
