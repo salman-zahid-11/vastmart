@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   getDashboardStats,
   getAllProductsAdmin,
@@ -27,18 +27,6 @@ import {
 import './AdminDashboard.css';
 
 
-const SECTIONS = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'coupons', label: 'Coupons' },
-  { id: 'banners', label: 'Banners' },
-  { id: 'notices', label: 'Notices' },
-  { id: 'applications', label: 'Seller Applications' },
-  { id: 'users', label: 'Users' },
-  { id: 'products', label: 'Products' },
-  { id: 'orders', label: 'Orders' },
-  { id: 'activity', label: 'Activity Log' },
-];
-
 function AdminDashboard() {
     const { user } = useAuth();
   const isSuperAdmin = user?.adminLevel === 'super_admin';
@@ -56,7 +44,7 @@ function AdminDashboard() {
     { id: 'activity', label: 'Activity Log' },
     { id: 'categories', label: 'Categories' },
   ];
-  const SECTIONS = ALL_SECTIONS.filter((s) => !s.superOnly || isSuperAdmin);
+  const sections = ALL_SECTIONS.filter((section) => !section.superOnly || isSuperAdmin);
   const [activeSection, setActiveSection] = useState('overview');
 
   const [stats, setStats] = useState(null);
@@ -74,14 +62,22 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
-
-  const fetchAll = async () => {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
+    setError('');
+
     try {
-      const [statsData, productsData, usersData, ordersData, applicationsData, noticesData, activityData, abandonedData] = await Promise.all([
+      const [
+        statsData,
+        productsData,
+        usersData,
+        ordersData,
+        applicationsData,
+        noticesData,
+        activityData,
+        abandonedData,
+        categoriesData,
+      ] = await Promise.all([
         getDashboardStats(),
         getAllProductsAdmin(),
         getAllUsers(),
@@ -90,32 +86,51 @@ function AdminDashboard() {
         getAllNotices(),
         getActivityLog(),
         getAbandonedActivity(),
+        getAllCategories(),
       ]);
-      setStats(statsData);
-      setProducts(productsData);
-      setUsers(usersData);
-      setOrders(ordersData);
-      setApplications(applicationsData);
-      setNotices(noticesData);
-      setActivity(activityData);
-      setAbandoned(abandonedData);
-      // Only super admins can access these — fetch separately so a 403 here
-      // never breaks the rest of the dashboard for moderators
+
+      setStats(statsData || {});
+      setProducts(Array.isArray(productsData) ? productsData : []);
+      setUsers(Array.isArray(usersData) ? usersData : []);
+      setOrders(Array.isArray(ordersData) ? ordersData : []);
+      setApplications(Array.isArray(applicationsData) ? applicationsData : []);
+      setNotices(Array.isArray(noticesData) ? noticesData : []);
+      setActivity(Array.isArray(activityData) ? activityData : []);
+      setAbandoned(Array.isArray(abandonedData) ? abandonedData : []);
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+
+      // Only super admins can access these. A 403 here must not break the
+      // rest of the dashboard for moderators.
       if (isSuperAdmin) {
         try {
-          const [bannersData, couponsData] = await Promise.all([getAllBanners(), getAllCoupons()]);
-          setBanners(bannersData);
-          setCoupons(couponsData);
+          const [bannersData, couponsData] = await Promise.all([
+            getAllBanners(),
+            getAllCoupons(),
+          ]);
+          setBanners(Array.isArray(bannersData) ? bannersData : []);
+          setCoupons(Array.isArray(couponsData) ? couponsData : []);
         } catch (err) {
           console.error('Failed to load super-admin data', err);
+          setBanners([]);
+          setCoupons([]);
         }
+      } else {
+        setBanners([]);
+        setCoupons([]);
       }
     } catch (err) {
-      setError('Failed to load admin data');
+      console.error('Failed to load admin data', err);
+      setError(err?.response?.data?.message || 'Failed to load admin data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [isSuperAdmin]);
+
+  useEffect(() => {
+    if (user) {
+      fetchAll();
+    }
+  }, [user, fetchAll]);
 
   if (loading) return <p className="page-loading">Loading admin dashboard...</p>;
   if (error) return <p className="page-error">{error}</p>;
@@ -127,15 +142,15 @@ function AdminDashboard() {
   Admin {isSuperAdmin ? <span className="admin-sidebar__tier">Super Admin</span> : <span className="admin-sidebar__tier admin-sidebar__tier--mod">Moderator</span>}
 </p>
         <nav className="admin-sidebar__nav">
-          {SECTIONS.map((section) => (
+          {sections.map((section) => (
             <button
               key={section.id}
               className={`admin-sidebar__link ${activeSection === section.id ? 'admin-sidebar__link--active' : ''}`}
               onClick={() => setActiveSection(section.id)}
             >
               {section.label}
-              {section.id === 'products' && stats.pendingProducts > 0 && (
-                <span className="admin-sidebar__badge">{stats.pendingProducts}</span>
+              {section.id === 'products' && stats.products?.pending > 0 && (
+                <span className="admin-sidebar__badge">{stats.products.pending}</span>
               )}
             </button>
           ))}
@@ -180,7 +195,7 @@ function CategoriesSection({ categories, setCategories }) {
     setError('');
     try {
       const created = await createCategory(newCategoryName.trim());
-      setCategories([...categories, created].sort((a, b) => a.name.localeCompare(b.name)));
+      setCategories((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setNewCategoryName('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create category');
@@ -195,7 +210,7 @@ function CategoriesSection({ categories, setCategories }) {
     setBusyId(categoryId);
     try {
       const updated = await addSubCategory(categoryId, value);
-      setCategories(categories.map((c) => (c._id === categoryId ? updated : c)));
+      setCategories((prev) => prev.map((c) => (c._id === categoryId ? updated : c)));
       setNewSubCategoryInputs({ ...newSubCategoryInputs, [categoryId]: '' });
     } catch (err) {
       console.error('Failed to add sub-category', err);
@@ -208,7 +223,7 @@ function CategoriesSection({ categories, setCategories }) {
     setBusyId(categoryId);
     try {
       const updated = await removeSubCategory(categoryId, subCategory);
-      setCategories(categories.map((c) => (c._id === categoryId ? updated : c)));
+      setCategories((prev) => prev.map((c) => (c._id === categoryId ? updated : c)));
     } catch (err) {
       console.error('Failed to remove sub-category', err);
     } finally {
@@ -220,7 +235,7 @@ function CategoriesSection({ categories, setCategories }) {
     setBusyId(id);
     try {
       const updated = await toggleCategory(id);
-      setCategories(categories.map((c) => (c._id === id ? updated : c)));
+      setCategories((prev) => prev.map((c) => (c._id === id ? updated : c)));
     } finally {
       setBusyId(null);
     }
@@ -230,7 +245,7 @@ function CategoriesSection({ categories, setCategories }) {
     setBusyId(id);
     try {
       await deleteCategory(id);
-      setCategories(categories.filter((c) => c._id !== id));
+      setCategories((prev) => prev.filter((c) => c._id !== id));
     } finally {
       setBusyId(null);
     }
@@ -278,13 +293,13 @@ function CategoriesSection({ categories, setCategories }) {
                 </div>
 
                 <div className="category-card__subs">
-                  {category.subCategories.map((sub) => (
+                  {(category.subCategories || []).map((sub) => (
                     <span key={sub} className="category-card__sub-tag">
                       {sub}
                       <button onClick={() => handleRemoveSub(category._id, sub)}>×</button>
                     </span>
                   ))}
-                  {category.subCategories.length === 0 && (
+                  {(!category.subCategories || category.subCategories.length === 0) && (
                     <span style={{ fontSize: '12.5px', color: 'var(--color-ink-faint)' }}>No sub-categories yet</span>
                   )}
                 </div>
@@ -329,7 +344,7 @@ function OverviewSection({ stats }) {
       <div className="overview-hero">
         <div className="overview-hero__main">
           <p className="overview-hero__label">Total Revenue</p>
-          <p className="overview-hero__value">৳{(revenue.total || 0).toLocaleString()}</p>
+          <p className="overview-hero__value">৳{Number(revenue.total || 0).toLocaleString()}</p>
           <p className="overview-hero__sub">Avg. order value: ৳{revenue.avgOrderValue || 0}</p>
         </div>
         <div className="overview-hero__side">
@@ -428,7 +443,7 @@ function NoticesSection({ notices, setNotices }) {
     setSubmitting(true);
     try {
       const created = await createNotice(newMessage.trim());
-      setNotices([created, ...notices]);
+      setNotices((prev) => [created, ...prev]);
       setNewMessage('');
     } catch (err) {
       console.error('Failed to create notice', err);
@@ -441,7 +456,7 @@ function NoticesSection({ notices, setNotices }) {
     setBusyId(id);
     try {
       const updated = await toggleNotice(id);
-      setNotices(notices.map((n) => (n._id === id ? updated : n)));
+      setNotices((prev) => prev.map((n) => (n._id === id ? updated : n)));
     } catch (err) {
       console.error('Failed to toggle notice', err);
     } finally {
@@ -453,7 +468,7 @@ function NoticesSection({ notices, setNotices }) {
     setBusyId(id);
     try {
       await deleteNotice(id);
-      setNotices(notices.filter((n) => n._id !== id));
+      setNotices((prev) => prev.filter((n) => n._id !== id));
     } catch (err) {
       console.error('Failed to delete notice', err);
     } finally {
@@ -535,6 +550,14 @@ function BannersSection({ banners, setBanners }) {
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    return () => {
+      if (preview) {
+        URL.revokeObjectURL(preview);
+      }
+    };
+  }, [preview]);
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -563,7 +586,7 @@ function BannersSection({ banners, setBanners }) {
       Object.entries(formData).forEach(([key, value]) => data.append(key, value));
 
       const created = await createBanner(data);
-      setBanners([created, ...banners]);
+      setBanners((prev) => [created, ...prev]);
       setShowForm(false);
       setImageFile(null);
       setPreview(null);
@@ -579,7 +602,7 @@ function BannersSection({ banners, setBanners }) {
     setBusyId(id);
     try {
       const updated = await toggleBanner(id);
-      setBanners(banners.map((b) => (b._id === id ? updated : b)));
+      setBanners((prev) => prev.map((b) => (b._id === id ? updated : b)));
     } catch (err) {
       console.error('Failed to toggle banner', err);
     } finally {
@@ -591,7 +614,7 @@ function BannersSection({ banners, setBanners }) {
     setBusyId(id);
     try {
       await deleteBanner(id);
-      setBanners(banners.filter((b) => b._id !== id));
+      setBanners((prev) => prev.filter((b) => b._id !== id));
     } catch (err) {
       console.error('Failed to delete banner', err);
     } finally {
@@ -1034,7 +1057,7 @@ function ProductsSection({ products, setProducts, refreshStats }) {
 /* ===== Product Detail Modal ===== */
 function ProductDetailModal({ product, onClose, onApprove, isUpdating }) {
   const [activeImage, setActiveImage] = useState(0);
-  const images = product.images?.length > 0 ? product.images : ['https://via.placeholder.com/400'];
+  const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : ['/placeholder-product.png'];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -1176,11 +1199,11 @@ function OrdersSection({ orders, setOrders }) {
               const isUpdating = updatingId === order._id;
               return (
                 <tr key={order._id} style={{ opacity: isUpdating ? 0.5 : 1 }}>
-                  <td className="admin-table__mono">#{order._id.slice(-8).toUpperCase()}</td>
+                  <td className="admin-table__mono">#{String(order._id || '').slice(-8).toUpperCase()}</td>
                   <td>{order.user?.name || 'Unknown'}</td>
                   <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td><span className={`pill pill--status-${order.orderStatus}`}>{order.orderStatus}</span></td>
-                  <td>{order.paymentMethod.replace('_', ' ')}</td>
+                  <td>{order.paymentMethod?.replace('_', ' ') || 'N/A'}</td>
                   <td className="admin-table__mono">৳{order.totalAmount}</td>
                   <td>
                     <select
@@ -1276,7 +1299,7 @@ function CouponsSection({ coupons, setCoupons }) {
         perUserLimit: Number(formData.perUserLimit) || 1,
         expiresAt: formData.expiresAt || undefined,
       });
-      setCoupons([created, ...coupons]);
+      setCoupons((prev) => [created, ...prev]);
       setShowForm(false);
       setFormData({
         code: '', discountType: 'percentage', discountValue: '', minOrderValue: '',
@@ -1293,7 +1316,7 @@ function CouponsSection({ coupons, setCoupons }) {
     setBusyId(id);
     try {
       const updated = await toggleCoupon(id);
-      setCoupons(coupons.map((c) => (c._id === id ? updated : c)));
+      setCoupons((prev) => prev.map((c) => (c._id === id ? updated : c)));
     } finally {
       setBusyId(null);
     }
@@ -1303,7 +1326,7 @@ function CouponsSection({ coupons, setCoupons }) {
     setBusyId(id);
     try {
       await deleteCoupon(id);
-      setCoupons(coupons.filter((c) => c._id !== id));
+      setCoupons((prev) => prev.filter((c) => c._id !== id));
     } finally {
       setBusyId(null);
     }
@@ -1409,7 +1432,7 @@ function ManageAdminsSection({ users, setUsers }) {
     setBusyId(userId);
     try {
       const updated = await updateAdminLevel(userId, 'admin', level);
-      setUsers(users.map((u) => (u._id === userId ? { ...u, role: updated.role, adminLevel: updated.adminLevel } : u)));
+      setUsers((prev) => prev.map((u) => (u._id === userId ? { ...u, role: updated.role, adminLevel: updated.adminLevel } : u)));
     } catch (err) {
       console.error('Failed to update admin level', err);
     } finally {
@@ -1421,7 +1444,7 @@ function ManageAdminsSection({ users, setUsers }) {
     setBusyId(userId);
     try {
       const updated = await updateAdminLevel(userId, 'customer', null);
-      setUsers(users.map((u) => (u._id === userId ? { ...u, role: updated.role, adminLevel: updated.adminLevel } : u)));
+      setUsers((prev) => prev.map((u) => (u._id === userId ? { ...u, role: updated.role, adminLevel: updated.adminLevel } : u)));
     } catch (err) {
       console.error('Failed to revoke admin access', err);
     } finally {
