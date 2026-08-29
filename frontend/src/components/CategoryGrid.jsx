@@ -17,12 +17,12 @@ function CategoryGrid() {
 
       <div className="category-grid">
         {CATEGORIES.map((cat) => (
-          <Link
-            key={cat.name}
-            to={`/?search=${encodeURIComponent(cat.name)}`}
-            className="category-grid__item"
-            style={{ background: cat.color }}
-          >
+         <Link
+  key={cat.name}
+  to={`/?category=${encodeURIComponent(cat.name)}`}
+  className="category-grid__item"
+  style={{ background: cat.color }}
+>
             <span className="category-grid__emoji">{cat.emoji}</span>
             <span className="category-grid__label">{cat.name}</span>
           </Link>

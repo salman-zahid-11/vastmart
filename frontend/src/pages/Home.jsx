@@ -13,13 +13,14 @@ function Home() {
   const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
+  const categoryFromUrl = searchParams.get('category') || '';
 
-  const [filters, setFilters] = useState({ category: '', minPrice: '', maxPrice: '' });
+  const [filters, setFilters] = useState({ category: categoryFromUrl, minPrice: '', maxPrice: '' });
   const [sort, setSort] = useState('');
 
   useEffect(() => {
-    setFilters((prev) => ({ ...prev, category: '' }));
-  }, [searchQuery]);
+    setFilters((prev) => ({ ...prev, category: categoryFromUrl }));
+  }, [categoryFromUrl]);
 
   useEffect(() => {
     const fetchProducts = async () => {

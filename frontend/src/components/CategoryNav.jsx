@@ -25,10 +25,10 @@ function CategoryNav() {
           All Products
         </Link>
         {CATEGORIES.map((cat) => (
-          <Link key={cat} to={`/?search=${encodeURIComponent(cat)}`} className="category-nav__link">
-            {cat}
-          </Link>
-        ))}
+  <Link key={cat} to={`/?category=${encodeURIComponent(cat)}`} className="category-nav__link">
+    {cat}
+  </Link>
+))}
       </div>
     </nav>
   );
