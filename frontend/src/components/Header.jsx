@@ -180,6 +180,7 @@ function Header() {
                   <hr />
                   <Link to="/profile" onClick={() => setMenuOpen(false)}>My Profile</Link>
 <Link to="/orders" onClick={() => setMenuOpen(false)}>My Orders</Link>
+<Link to="/support" onClick={() => setMenuOpen(false)}>Support</Link>
 {user.role === 'customer' && (
   <Link to="/become-seller" onClick={() => setMenuOpen(false)}>Become a Seller</Link>
 )}

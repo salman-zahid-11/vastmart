@@ -24,6 +24,7 @@ import {
   toggleCategory,
   deleteCategory,
 } from '../services/categoryService';
+import { getAllTickets, updateTicket, addTicketMessage } from '../services/ticketService';
 import './AdminDashboard.css';
 
 
@@ -43,6 +44,7 @@ function AdminDashboard() {
     { id: 'abandoned', label: 'Abandoned Interest' },
     { id: 'activity', label: 'Activity Log' },
     { id: 'categories', label: 'Categories' },
+    { id: 'tickets', label: 'Support Tickets' },
   ];
   const sections = ALL_SECTIONS.filter((section) => !section.superOnly || isSuperAdmin);
   const [activeSection, setActiveSection] = useState('overview');
@@ -174,11 +176,113 @@ function AdminDashboard() {
         {activeSection === 'abandoned' && <AbandonedSection abandoned={abandoned} />}
         {activeSection === 'manage-admins' && <ManageAdminsSection users={users} setUsers={setUsers} />}
         {activeSection === 'categories' && <CategoriesSection categories={categories} setCategories={setCategories} />}
+        {activeSection === 'tickets' && <TicketsSection tickets={tickets} setTickets={setTickets} />}
       </main>
     </div>
   );
 }
 
+
+/* ===== Support Tickets ===== */
+function TicketsSection({ tickets, setTickets }) {
+  const [filter, setFilter] = useState('open');
+  const [selected, setSelected] = useState(null);
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+
+  const handleOpenTicket = (ticket) => {
+    setSelected(ticket);
+    setReply('');
+  };
+
+  const handleStatusChange = async (id, status) => {
+    const updated = await updateTicket(id, { status });
+    setTickets(tickets.map((t) => (t._id === id ? updated : t)));
+    if (selected?._id === id) setSelected(updated);
+  };
+
+  const handleReply = async () => {
+    if (!reply.trim() || !selected) return;
+    setSending(true);
+    try {
+      const updated = await addTicketMessage(selected._id, reply.trim());
+      setTickets(tickets.map((t) => (t._id === selected._id ? updated : t)));
+      setSelected(updated);
+      setReply('');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const visible = filter === 'all' ? tickets : tickets.filter((t) => t.status === filter);
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Support Tickets</h2>
+        <div className="admin-tabs">
+          {['open', 'in_progress', 'resolved', 'closed', 'all'].map((s) => (
+            <button key={s} className={`admin-tab ${filter === s ? 'admin-tab--active' : ''}`} onClick={() => setFilter(s)}>
+              {s === 'all' ? 'All' : s.replace('_', ' ')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? '340px 1fr' : '1fr', gap: 'var(--space-lg)' }}>
+        <div className="ticket-list">
+          {visible.length === 0 && <div className="dashboard__empty"><p>No tickets here.</p></div>}
+          {visible.map((t) => (
+            <button key={t._id} onClick={() => handleOpenTicket(t)} className="ticket-card" style={{ textAlign: 'left', cursor: 'pointer', borderColor: selected?._id === t._id ? 'var(--color-primary)' : undefined }}>
+              <div className="ticket-card__top">
+                <span className={`pill pill--status-${t.status.replace('_', '-')}`}>{t.status.replace('_', ' ')}</span>
+                <span className="ticket-card__date">{new Date(t.updatedAt).toLocaleDateString()}</span>
+              </div>
+              <h3>{t.subject}</h3>
+              <p className="ticket-card__preview">{t.user?.name} · {t.user?.email}</p>
+            </button>
+          ))}
+        </div>
+
+        {selected && (
+          <div className="ticket-detail__panel">
+            <div className="ticket-detail__header">
+              <div>
+                <h3>{selected.subject}</h3>
+                <p className="ticket-card__date">{selected.user?.name} · {selected.user?.email}</p>
+              </div>
+              <select value={selected.status} onChange={(e) => handleStatusChange(selected._id, e.target.value)} className="admin-table__status-select">
+                <option value="open">Open</option>
+                <option value="in_progress">In Progress</option>
+                <option value="resolved">Resolved</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+
+            <div className="ticket-thread">
+              {selected.messages.map((msg, i) => (
+                <div key={i} className={`ticket-message ${msg.senderRole === 'admin' ? 'ticket-message--staff' : 'ticket-message--mine'}`}>
+                  <div className="ticket-message__meta">
+                    <strong>{msg.senderRole === 'admin' ? 'You (Support)' : msg.senderName}</strong>
+                    <span>{new Date(msg.createdAt).toLocaleString()}</span>
+                  </div>
+                  <p>{msg.message}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="ticket-reply-form">
+              <textarea value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Reply to customer..." rows={3} />
+              <button onClick={handleReply} disabled={sending} className="dashboard__cta">
+                {sending ? 'Sending...' : 'Send Reply'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ===== Categories ===== */
 function CategoriesSection({ categories, setCategories }) {

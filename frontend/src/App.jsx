@@ -17,6 +17,9 @@ import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import BecomeSeller from './pages/BecomeSeller';
 import Footer from './components/Footer';
+import SupportTickets from './pages/SupportTickets';
+import NewTicket from './pages/NewTicket';
+import TicketDetail from './pages/TicketDetail';
 
 import { useState } from 'react';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
@@ -52,6 +55,9 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/become-seller" element={<BecomeSeller />} />
+        <Route path="/support" element={<SupportTickets />} />
+       <Route path="/support/new" element={<NewTicket />} />
+       <Route path="/support/:id" element={<TicketDetail />} />
       </Routes>
 
       <Footer />
