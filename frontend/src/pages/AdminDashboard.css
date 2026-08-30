@@ -960,3 +960,36 @@
   border-radius: var(--radius-md);
   padding: var(--space-lg);
 }
+
+.bulk-action-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-ink);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 12px 18px;
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-lg);
+  z-index: 500;
+  animation: fadeIn 150ms ease-out both;
+}
+
+.bulk-action-bar span {
+  font-size: 13.5px;
+  font-weight: 600;
+  padding-right: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (max-width: 700px) {
+  .bulk-action-bar {
+    left: var(--space-md);
+    right: var(--space-md);
+    transform: none;
+    flex-wrap: wrap;
+  }
+}

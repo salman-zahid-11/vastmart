@@ -136,4 +136,47 @@ const reviewApplication = async (req, res) => {
   }
 };
 
-module.exports = { submitApplication, getMyApplication, getAllApplications, reviewApplication };
+// @desc   Approve or reject multiple seller applications at once
+// @route  PUT /api/seller-applications/bulk-review
+const bulkReviewApplications = async (req, res) => {
+  try {
+    const { applicationIds, decision } = req.body;
+
+    if (!Array.isArray(applicationIds) || applicationIds.length === 0) {
+      return res.status(400).json({ message: 'applicationIds must be a non-empty array' });
+    }
+    if (!['approved', 'rejected'].includes(decision)) {
+      return res.status(400).json({ message: 'Invalid decision' });
+    }
+
+    const applications = await SellerApplication.find({ _id: { $in: applicationIds }, status: 'pending' });
+
+    for (const app of applications) {
+      app.status = decision;
+      app.reviewedBy = req.user._id;
+      app.reviewedAt = new Date();
+      if (decision === 'rejected') {
+        app.rejectionReason = 'Bulk rejected';
+      }
+      await app.save();
+
+      if (decision === 'approved') {
+        await User.findByIdAndUpdate(app.user, { role: 'seller' });
+      }
+    }
+
+    await logActivity({
+      user: req.user,
+      action: decision === 'approved' ? 'product_approved' : 'product_rejected',
+      description: `${req.user.name} bulk ${decision} ${applications.length} seller application(s)`,
+      meta: { applicationIds },
+    });
+
+    res.status(200).json({ message: `${applications.length} application(s) ${decision}`, count: applications.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { submitApplication, getMyApplication, getAllApplications, reviewApplication, bulkReviewApplications };

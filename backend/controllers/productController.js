@@ -277,4 +277,34 @@ const approveProduct = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories, getSubCategories, updateProduct };
+// @desc   Approve or reject multiple products at once
+// @route  PUT /api/products/admin/bulk-approve
+const bulkApproveProducts = async (req, res) => {
+  try {
+    const { productIds, isApproved } = req.body;
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: 'productIds must be a non-empty array' });
+    }
+
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $set: { isApproved: Boolean(isApproved) } }
+    );
+
+    await logActivity({
+      user: req.user,
+      action: isApproved ? 'product_approved' : 'product_rejected',
+      description: `${req.user.name} bulk ${isApproved ? 'approved' : 'rejected'} ${productIds.length} product(s)`,
+      meta: { productIds },
+    });
+
+    const updatedProducts = await Product.find({ _id: { $in: productIds } }).populate('seller', 'name email');
+    res.status(200).json(updatedProducts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories, updateProduct, bulkApproveProducts };

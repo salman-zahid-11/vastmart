@@ -21,3 +21,8 @@ export const reviewApplication = async (id, decision, rejectionReason) => {
   const response = await api.put(`/seller-applications/${id}/review`, { decision, rejectionReason });
   return response.data;
 };
+
+export const bulkReviewApplications = async (applicationIds, decision) => {
+  const response = await api.put('/seller-applications/bulk-review', { applicationIds, decision });
+  return response.data;
+};

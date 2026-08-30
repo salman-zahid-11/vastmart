@@ -44,3 +44,7 @@ export const updateAdminLevel = async (userId, role, adminLevel) => {
   const response = await api.put(`/admin/users/${userId}/admin-level`, { role, adminLevel });
   return response.data;
 };
+export const bulkApproveProducts = async (productIds, isApproved) => {
+  const response = await api.put('/products/admin/bulk-approve', { productIds, isApproved });
+  return response.data;
+};

@@ -25,13 +25,15 @@ import {
   deleteCategory,
 } from '../services/categoryService';
 import { getAllTickets, updateTicket, addTicketMessage } from '../services/ticketService';
+import { bulkApproveProducts } from '../services/adminService';
+import { bulkReviewApplications } from '../services/sellerApplicationService';
 import './AdminDashboard.css';
 
 
 function AdminDashboard() {
-    const { user } = useAuth();
+  const { user } = useAuth();
   const isSuperAdmin = user?.adminLevel === 'super_admin';
-    const ALL_SECTIONS = [
+  const ALL_SECTIONS = [
     { id: 'overview', label: 'Overview' },
     { id: 'manage-admins', label: 'Manage Admins', superOnly: true },
     { id: 'coupons', label: 'Coupons', superOnly: true },
@@ -60,6 +62,7 @@ function AdminDashboard() {
   const [coupons, setCoupons] = useState([]);
   const [abandoned, setAbandoned] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [tickets, setTickets] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -79,6 +82,7 @@ function AdminDashboard() {
         activityData,
         abandonedData,
         categoriesData,
+        ticketsData,
       ] = await Promise.all([
         getDashboardStats(),
         getAllProductsAdmin(),
@@ -89,6 +93,7 @@ function AdminDashboard() {
         getActivityLog(),
         getAbandonedActivity(),
         getAllCategories(),
+        getAllTickets(),
       ]);
 
       setStats(statsData || {});
@@ -100,6 +105,7 @@ function AdminDashboard() {
       setActivity(Array.isArray(activityData) ? activityData : []);
       setAbandoned(Array.isArray(abandonedData) ? abandonedData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+      setTickets(Array.isArray(ticketsData) ? ticketsData : []);
 
       // Only super admins can access these. A 403 here must not break the
       // rest of the dashboard for moderators.
@@ -133,6 +139,7 @@ function AdminDashboard() {
       fetchAll();
     }
   }, [user, fetchAll]);
+
 
   if (loading) return <p className="page-loading">Loading admin dashboard...</p>;
   if (error) return <p className="page-error">{error}</p>;
@@ -662,6 +669,7 @@ function BannersSection({ banners, setBanners }) {
     };
   }, [preview]);
 
+
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -908,8 +916,36 @@ function ApplicationsSection({ applications, setApplications, refreshAll }) {
   const [reviewingId, setReviewingId] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
 
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAll = () => {
+    const pendingVisible = visible.filter((a) => a.status === 'pending');
+    if (selectedIds.length === pendingVisible.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pendingVisible.map((a) => a._id));
+    }
+  };
+
+  const handleBulkDecision = async (decision) => {
+    setBulkBusy(true);
+    try {
+      await bulkReviewApplications(selectedIds, decision);
+      await refreshAll();
+      setSelectedIds([]);
+    } catch (err) {
+      console.error('Bulk review failed', err);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
 
   const handleApprove = async (id) => {
     setReviewingId(id);
@@ -967,6 +1003,14 @@ function ApplicationsSection({ applications, setApplications, refreshAll }) {
             return (
               <div key={app._id} className="application-card" style={{ opacity: isReviewing ? 0.5 : 1 }}>
                 <div className="application-card__header">
+                  {app.status === 'pending' && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(app._id)}
+                      onChange={() => toggleSelect(app._id)}
+                      style={{ marginRight: '8px' }}
+                    />
+                  )}
                   <div>
                     <h4>{app.businessName}</h4>
                     <p className="application-card__meta">
@@ -1057,6 +1101,12 @@ function ProductsSection({ products, setProducts, refreshStats }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [filter, setFilter] = useState('pending');
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [filter]);
 
   const handleApprove = async (productId, isApproved) => {
     setUpdatingId(productId);
@@ -1068,6 +1118,33 @@ function ProductsSection({ products, setProducts, refreshStats }) {
       console.error('Failed to update product approval', err);
     } finally {
       setUpdatingId(null);
+    }
+  };
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === visibleProducts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(visibleProducts.map((p) => p._id));
+    }
+  };
+
+  const handleBulkAction = async (isApproved) => {
+    setBulkBusy(true);
+    try {
+      await bulkApproveProducts(selectedIds, isApproved);
+      setProducts((prev) =>
+        prev.map((p) => (selectedIds.includes(p._id) ? { ...p, isApproved } : p))
+      );
+      setSelectedIds([]);
+      refreshStats();
+    } catch (err) {
+      console.error('Bulk action failed', err);
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -1085,6 +1162,11 @@ function ProductsSection({ products, setProducts, refreshStats }) {
           <button className={`admin-tab ${filter === 'all' ? 'admin-tab--active' : ''}`} onClick={() => setFilter('all')}>
             All ({products.length})
           </button>
+                  {filter === 'pending' && visibleProducts.length > 0 && (
+          <button onClick={toggleSelectAll} style={{ fontSize: '12.5px', color: 'var(--color-primary)', fontWeight: 600, marginLeft: 'var(--space-sm)' }}>
+            {selectedIds.length === visibleProducts.length ? 'Deselect all' : 'Select all'}
+          </button>
+        )}
         </div>
       </div>
 
@@ -1095,6 +1177,13 @@ function ProductsSection({ products, setProducts, refreshStats }) {
           <table className="admin-table">
             <thead>
               <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={visibleProducts.length > 0 && selectedIds.length === visibleProducts.length}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
                 <th>Product</th>
                 <th>Seller</th>
                 <th>Price</th>
@@ -1107,6 +1196,13 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                 const isUpdating = updatingId === product._id;
                 return (
                   <tr key={product._id} style={{ opacity: isUpdating ? 0.5 : 1 }}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(product._id)}
+                        onChange={() => toggleSelect(product._id)}
+                      />
+                    </td>
                     <td className="admin-table__name">
                       <button className="admin-table__link-btn" onClick={() => setSelectedProduct(product)}>
                         {product.name}
@@ -1143,6 +1239,22 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                 </div>
       )}
 
+
+      {selectedIds.length > 0 && (
+        <div className="bulk-action-bar">
+          <span>{selectedIds.length} selected</span>
+          <button disabled={bulkBusy} onClick={() => handleBulkAction(true)} className="dashboard__action-btn dashboard__action-btn--success">
+            Approve Selected
+          </button>
+          <button disabled={bulkBusy} onClick={() => handleBulkAction(false)} className="dashboard__action-btn dashboard__action-btn--danger">
+            Reject Selected
+          </button>
+          <button onClick={() => setSelectedIds([])} className="dashboard__action-btn">
+            Cancel
+          </button>
+        </div>
+      )}
+
       {selectedProduct && (
         <ProductDetailModal
           product={selectedProduct}
@@ -1157,6 +1269,7 @@ function ProductsSection({ products, setProducts, refreshStats }) {
     </div>
   );
 }
+
 
 /* ===== Product Detail Modal ===== */
 function ProductDetailModal({ product, onClose, onApprove, isUpdating }) {
@@ -1329,6 +1442,7 @@ function OrdersSection({ orders, setOrders }) {
           </tbody>
         </table>
       </div>
+
     </div>
   );
 }
