@@ -7,6 +7,10 @@ import {
   updateUserStatus,
   getAllOrdersAdmin,
   getActivityLog,
+  getSalesAnalytics,
+  getTopProducts,
+  getTopSellers,
+  getOrderStatusBreakdown,
 } from '../services/adminService';
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
 import { updateOrderStatus } from '../services/adminService';
@@ -27,6 +31,10 @@ import {
 import { getAllTickets, updateTicket, addTicketMessage } from '../services/ticketService';
 import { bulkApproveProducts } from '../services/adminService';
 import { bulkReviewApplications } from '../services/sellerApplicationService';
+import {
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts';
 import './AdminDashboard.css';
 
 
@@ -47,6 +55,7 @@ function AdminDashboard() {
     { id: 'activity', label: 'Activity Log' },
     { id: 'categories', label: 'Categories' },
     { id: 'tickets', label: 'Support Tickets' },
+    { id: 'analytics', label: 'Analytics' },
   ];
   const sections = ALL_SECTIONS.filter((section) => !section.superOnly || isSuperAdmin);
   const [activeSection, setActiveSection] = useState('overview');
@@ -184,11 +193,154 @@ function AdminDashboard() {
         {activeSection === 'manage-admins' && <ManageAdminsSection users={users} setUsers={setUsers} />}
         {activeSection === 'categories' && <CategoriesSection categories={categories} setCategories={setCategories} />}
         {activeSection === 'tickets' && <TicketsSection tickets={tickets} setTickets={setTickets} />}
+        {activeSection === 'analytics' && <AnalyticsSection />}
       </main>
     </div>
   );
 }
 
+
+
+/* ===== Analytics ===== */
+const CHART_COLORS = ['#5B3DF5', '#FF8A3D', '#1FAE6E', '#0284C7', '#E5484D'];
+
+function AnalyticsSection() {
+  const [days, setDays] = useState(30);
+  const [salesData, setSalesData] = useState([]);
+  const [topProducts, setTopProducts] = useState([]);
+  const [topSellers, setTopSellers] = useState([]);
+  const [statusBreakdown, setStatusBreakdown] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    Promise.all([
+      getSalesAnalytics(days),
+      getTopProducts(),
+      getTopSellers(),
+      getOrderStatusBreakdown(),
+    ])
+      .then(([sales, products, sellers, statuses]) => {
+        setSalesData(sales.dailyData);
+        setTopProducts(products);
+        setTopSellers(sellers);
+        setStatusBreakdown(statuses.filter((s) => s.count > 0));
+      })
+      .finally(() => setLoading(false));
+  }, [days]);
+
+  const formatDate = (dateStr) => {
+    const d = new Date(dateStr);
+    return `${d.getDate()}/${d.getMonth() + 1}`;
+  };
+
+  if (loading) return <p className="page-loading">Loading analytics...</p>;
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Analytics</h2>
+        <div className="admin-tabs">
+          {[7, 30, 90].map((d) => (
+            <button key={d} className={`admin-tab ${days === d ? 'admin-tab--active' : ''}`} onClick={() => setDays(d)}>
+              {d} days
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="analytics-chart-card">
+        <h4>Revenue Trend</h4>
+        <ResponsiveContainer width="100%" height={280}>
+          <LineChart data={salesData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+            <XAxis dataKey="date" tickFormatter={formatDate} fontSize={12} />
+            <YAxis fontSize={12} />
+            <Tooltip
+              labelFormatter={(label) => new Date(label).toLocaleDateString()}
+              formatter={(value, name) => [name === 'revenue' ? `৳${value}` : value, name === 'revenue' ? 'Revenue' : 'Orders']}
+            />
+            <Legend />
+            <Line type="monotone" dataKey="revenue" stroke="#5B3DF5" strokeWidth={2} dot={false} name="Revenue" />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+
+      <div className="analytics-grid">
+        <div className="analytics-chart-card">
+          <h4>Top Products by Revenue</h4>
+          {topProducts.length === 0 ? (
+            <p className="dashboard__empty" style={{ border: 'none' }}>No sales data yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={topProducts} layout="vertical" margin={{ left: 40 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+                <XAxis type="number" fontSize={12} />
+                <YAxis type="category" dataKey="name" width={120} fontSize={11} tick={{ width: 110 }} />
+                <Tooltip formatter={(value) => `৳${value}`} />
+                <Bar dataKey="revenue" fill="#5B3DF5" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+
+        <div className="analytics-chart-card">
+          <h4>Order Status Breakdown</h4>
+          {statusBreakdown.length === 0 ? (
+            <p className="dashboard__empty" style={{ border: 'none' }}>No orders yet.</p>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={statusBreakdown}
+                  dataKey="count"
+                  nameKey="status"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={90}
+                  label={(entry) => `${entry.status} (${entry.count})`}
+                >
+                  {statusBreakdown.map((_, i) => (
+                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </div>
+      </div>
+
+      <div className="analytics-chart-card">
+        <h4>Top Sellers by Revenue</h4>
+        {topSellers.length === 0 ? (
+          <p className="dashboard__empty" style={{ border: 'none' }}>No seller sales yet.</p>
+        ) : (
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Seller</th>
+                  <th>Orders</th>
+                  <th>Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {topSellers.map((s, i) => (
+                  <tr key={i}>
+                    <td className="admin-table__name">{s.name}</td>
+                    <td className="admin-table__mono">{s.orderCount}</td>
+                    <td className="admin-table__mono">৳{s.revenue.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /* ===== Support Tickets ===== */
 function TicketsSection({ tickets, setTickets }) {

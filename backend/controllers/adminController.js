@@ -187,6 +187,129 @@ const updateAdminLevel = async (req, res) => {
   }
 };
 
+// @desc   Get daily revenue/order trends for a given date range
+// @route  GET /api/admin/analytics/sales?days=30
+const getSalesAnalytics = async (req, res) => {
+  try {
+    const days = parseInt(req.query.days) || 30;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    const orders = await Order.find({
+      createdAt: { $gte: startDate },
+      orderStatus: { $ne: 'cancelled' },
+    });
+
+    // Group by day
+    const dailyMap = {};
+    for (let i = 0; i <= days; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10); // YYYY-MM-DD
+      dailyMap[key] = { date: key, revenue: 0, orders: 0 };
+    }
+
+    orders.forEach((order) => {
+      const key = order.createdAt.toISOString().slice(0, 10);
+      if (dailyMap[key]) {
+        dailyMap[key].revenue += order.totalAmount;
+        dailyMap[key].orders += 1;
+      }
+    });
+
+    const dailyData = Object.values(dailyMap);
+
+    res.status(200).json({ dailyData });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc   Get top-selling products by revenue
+// @route  GET /api/admin/analytics/top-products
+const getTopProducts = async (req, res) => {
+  try {
+    const orders = await Order.find({ orderStatus: { $ne: 'cancelled' } });
+
+    const productMap = {};
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        const key = item.product.toString();
+        if (!productMap[key]) {
+          productMap[key] = { name: item.name, revenue: 0, quantity: 0 };
+        }
+        productMap[key].revenue += item.price * item.quantity;
+        productMap[key].quantity += item.quantity;
+      });
+    });
+
+    const topProducts = Object.values(productMap)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    res.status(200).json(topProducts);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc   Get top-performing sellers by revenue
+// @route  GET /api/admin/analytics/top-sellers
+const getTopSellers = async (req, res) => {
+  try {
+    const orders = await Order.find({ orderStatus: { $ne: 'cancelled' } });
+
+    const sellerMap = {};
+    orders.forEach((order) => {
+      order.items.forEach((item) => {
+        const key = item.seller?.toString();
+        if (!key) return;
+        if (!sellerMap[key]) {
+          sellerMap[key] = { sellerId: key, revenue: 0, orders: new Set() };
+        }
+        sellerMap[key].revenue += item.price * item.quantity;
+        sellerMap[key].orders.add(order._id.toString());
+      });
+    });
+
+    const sellerIds = Object.keys(sellerMap);
+    const sellers = await User.find({ _id: { $in: sellerIds } }).select('name email');
+    const sellerLookup = Object.fromEntries(sellers.map((s) => [s._id.toString(), s]));
+
+    const topSellers = sellerIds
+      .map((id) => ({
+        name: sellerLookup[id]?.name || 'Unknown',
+        email: sellerLookup[id]?.email || '',
+        revenue: sellerMap[id].revenue,
+        orderCount: sellerMap[id].orders.size,
+      }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    res.status(200).json(topSellers);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc   Get order status breakdown
+// @route  GET /api/admin/analytics/order-status
+const getOrderStatusBreakdown = async (req, res) => {
+  try {
+    const statuses = ['placed', 'processing', 'shipped', 'delivered', 'cancelled'];
+    const counts = await Promise.all(
+      statuses.map((status) => Order.countDocuments({ orderStatus: status }))
+    );
+
+    const breakdown = statuses.map((status, i) => ({ status, count: counts[i] }));
+    res.status(200).json(breakdown);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
@@ -194,4 +317,8 @@ module.exports = {
   getAllOrdersAdmin,
   getActivityLog,
   updateAdminLevel,
+  getSalesAnalytics,
+  getTopProducts,
+  getTopSellers,
+  getOrderStatusBreakdown,
 };

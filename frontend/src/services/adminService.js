@@ -48,3 +48,23 @@ export const bulkApproveProducts = async (productIds, isApproved) => {
   const response = await api.put('/products/admin/bulk-approve', { productIds, isApproved });
   return response.data;
 };
+
+export const getSalesAnalytics = async (days = 30) => {
+  const response = await api.get('/admin/analytics/sales', { params: { days } });
+  return response.data;
+};
+
+export const getTopProducts = async () => {
+  const response = await api.get('/admin/analytics/top-products');
+  return response.data;
+};
+
+export const getTopSellers = async () => {
+  const response = await api.get('/admin/analytics/top-sellers');
+  return response.data;
+};
+
+export const getOrderStatusBreakdown = async () => {
+  const response = await api.get('/admin/analytics/order-status');
+  return response.data;
+};
