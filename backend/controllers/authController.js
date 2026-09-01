@@ -58,6 +58,9 @@ const registerUser = async (req, res) => {
 
 // @desc   Login user
 // @route  POST /api/auth/login
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -77,10 +80,40 @@ const loginUser = async (req, res) => {
       return res.status(403).json({ message: `Account is ${user.status}` });
     }
 
-    // 3. Compare passwords
+    // 3. Check if account is currently locked
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      const minutesLeft = Math.ceil((user.lockUntil - new Date()) / 60000);
+      return res.status(423).json({
+        message: `Too many failed attempts. Account locked for ${minutesLeft} more minute(s).`,
+      });
+    }
+
+    // 4. Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      user.failedLoginAttempts += 1;
+
+      if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+        user.lockUntil = new Date(Date.now() + LOCK_DURATION_MS);
+        user.failedLoginAttempts = 0; // reset counter, lock is now the active protection
+        await user.save();
+        return res.status(423).json({
+          message: `Too many failed attempts. Account locked for 15 minutes.`,
+        });
+      }
+
+      await user.save();
+      const attemptsLeft = MAX_FAILED_ATTEMPTS - user.failedLoginAttempts;
+      return res.status(401).json({
+        message: `Invalid email or password. ${attemptsLeft} attempt(s) remaining before lockout.`,
+      });
+    }
+
+    // Successful login — reset any prior failed attempts
+    if (user.failedLoginAttempts > 0 || user.lockUntil) {
+      user.failedLoginAttempts = 0;
+      user.lockUntil = null;
+      await user.save();
     }
 
 
