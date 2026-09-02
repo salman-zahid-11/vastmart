@@ -5,6 +5,8 @@ import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import BannerCarousel from '../components/BannerCarousel';
 import CategoryGrid from '../components/CategoryGrid';
+import Reveal from '../components/Reveal';
+import StaggerGrid, { StaggerItem } from '../components/StaggerGrid';
 import './Home.css';
 
 function Home() {
@@ -53,7 +55,9 @@ function Home() {
   return (
     <div>
       <BannerCarousel />
-      <CategoryGrid />
+      <Reveal>
+        <CategoryGrid />
+      </Reveal>
 
       <section id="products" className="products-section">
         <div className="products-section__header">
@@ -85,18 +89,14 @@ function Home() {
               </p>
             )}
 
-            {!loading && !error && products.length > 0 && (
-              <div className="products-grid">
-                {products.map((product, i) => (
-                  <div
-                    key={product._id}
-                    className="products-grid__item"
-                    style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
-                  >
+             {!loading && !error && products.length > 0 && (
+              <StaggerGrid className="products-grid">
+                {products.map((product) => (
+                  <StaggerItem key={product._id}>
                     <ProductCard product={product} />
-                  </div>
+                  </StaggerItem>
                 ))}
-              </div>
+              </StaggerGrid>
             )}
           </div>
         </div>
