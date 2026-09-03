@@ -71,3 +71,10 @@ img {
     padding-bottom: 60px;
   }
 }
+button:not(:disabled), a.dashboard__cta, a.hero__cta, a.confirmation-actions__primary {
+  transition: transform 150ms ease-out;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.97);
+}

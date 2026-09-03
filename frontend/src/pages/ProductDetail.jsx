@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import ImageGallery from '../components/ImageGallery';
 import { trackActivity } from '../services/activityService';
+import { motion } from 'framer-motion';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -54,7 +55,7 @@ function ProductDetail() {
     }
   };
 
-    const handleBuyNow = async () => {
+  const handleBuyNow = async () => {
     if (!user) {
       navigate('/login');
       return;
@@ -72,7 +73,6 @@ function ProductDetail() {
     }
   };
 
-
   if (loading) return <p className="page-loading">Loading...</p>;
   if (error) return <p className="page-error">{error}</p>;
   if (!product) return null;
@@ -80,8 +80,19 @@ function ProductDetail() {
   const hasDiscount = Boolean(product.discountPrice);
 
   return (
-        <div className="product-detail">
-      <ImageGallery images={product.images} />
+    <motion.div
+      className="product-detail"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <ImageGallery images={product.images} />
+      </motion.div>
 
       <div className="product-detail__info">
         <p className="product-detail__category">
@@ -102,7 +113,7 @@ function ProductDetail() {
 
         <p className="product-detail__seller">Sold by <strong>{product.seller?.name || 'Unknown Seller'}</strong></p>
 
-                <div className="product-detail__cta-row">
+        <div className="product-detail__cta-row">
           <button
             onClick={handleAddToCart}
             disabled={product.stock === 0 || adding}
@@ -122,7 +133,7 @@ function ProductDetail() {
 
         {message && <p className="product-detail__feedback">{message}</p>}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

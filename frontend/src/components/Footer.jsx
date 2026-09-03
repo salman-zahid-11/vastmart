@@ -1,11 +1,18 @@
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import './Footer.css';
 
 function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="site-footer">
+    <motion.footer
+      className="site-footer"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="site-footer__inner">
         <div className="site-footer__top">
           <div className="site-footer__brand">
@@ -75,7 +82,7 @@ function Footer() {
           </div>
         </div>
       </div>
-    </footer>
+    </motion.footer>
   );
 }
 

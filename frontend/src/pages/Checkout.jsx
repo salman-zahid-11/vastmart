@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/orderService';
 import { validateCoupon } from '../services/couponService';
+import Reveal from '../components/Reveal';
 import './Checkout.css';
 
 function Checkout() {
@@ -108,6 +109,7 @@ function Checkout() {
 
           
 
+          <Reveal>
           <section className="checkout-section">
             <h3>Contact Details</h3>
 
@@ -124,7 +126,9 @@ function Checkout() {
               </div>
             </div>
           </section>
+          </Reveal>
 
+          <Reveal>
           <section className="checkout-section">
             <h3>Shipping Address</h3>
 
@@ -171,7 +175,7 @@ function Checkout() {
               <input type="text" name="deliveryNotes" value={formData.deliveryNotes} onChange={handleChange} placeholder="Gate code, landmark, delivery instructions..." />
             </div>
           </section>
-
+          </Reveal>
 
           <button type="submit" disabled={loading} className="checkout-form__submit">
             {loading ? 'Placing order...' : `Place Order — ৳${total}`}
