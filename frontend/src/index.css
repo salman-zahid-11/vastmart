@@ -78,3 +78,14 @@ button:not(:disabled), a.dashboard__cta, a.hero__cta, a.confirmation-actions__pr
 button:not(:disabled):active {
   transform: scale(0.97);
 }
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}

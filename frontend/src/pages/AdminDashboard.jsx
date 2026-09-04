@@ -35,6 +35,7 @@ import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
+import { motion, AnimatePresence } from 'framer-motion';
 import './AdminDashboard.css';
 
 
@@ -1429,8 +1430,22 @@ function ProductDetailModal({ product, onClose, onApprove, isUpdating }) {
   const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : ['/placeholder-product.png'];
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+    <motion.div
+      className="modal-overlay"
+      onClick={onClose}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <motion.div
+        className="modal-content"
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+      >
         <button className="modal-close" onClick={onClose}>×</button>
 
         <div className="product-modal">
@@ -1523,8 +1538,8 @@ function ProductDetailModal({ product, onClose, onApprove, isUpdating }) {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+            </motion.div>
+    </motion.div>
   );
 }
 
