@@ -20,6 +20,7 @@ import Footer from './components/Footer';
 import SupportTickets from './pages/SupportTickets';
 import NewTicket from './pages/NewTicket';
 import TicketDetail from './pages/TicketDetail';
+import AnimatedBackground from './components/AnimatedBackground';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -36,6 +37,9 @@ function App() {
 
   return (
     <div>
+      {/* Animated background - stays fixed behind the entire application */}
+      <AnimatedBackground />
+
       <TopBar />
       <Header />
       <CategoryNav />
@@ -46,7 +50,10 @@ function App() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+          transition={{
+            duration: 0.35,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         >
           <Routes location={location}>
             <Route path="/" element={<Home />} />
@@ -55,16 +62,33 @@ function App() {
             <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+
             <Route
               path="/order-confirmation/:id"
               element={<OrderConfirmation />}
             />
+
             <Route path="/orders" element={<OrderHistory />} />
-            <Route path="/seller/dashboard" element={<SellerDashboard />} />
-            <Route path="/seller/products/new" element={<AddProduct />} />
-            <Route path="/seller/products/edit/:id" element={<AddProduct />} />
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route
+              path="/seller/dashboard"
+              element={<SellerDashboard />}
+            />
+            <Route
+              path="/seller/products/new"
+              element={<AddProduct />}
+            />
+            <Route
+              path="/seller/products/edit/:id"
+              element={<AddProduct />}
+            />
+            <Route
+              path="/admin/dashboard"
+              element={<AdminDashboard />}
+            />
+            <Route
+              path="/forgot-password"
+              element={<ForgotPassword />}
+            />
             <Route path="/profile" element={<Profile />} />
             <Route path="/become-seller" element={<BecomeSeller />} />
             <Route path="/support" element={<SupportTickets />} />

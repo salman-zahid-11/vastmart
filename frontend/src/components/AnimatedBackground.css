@@ -1,0 +1,73 @@
+.animated-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.animated-bg__blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.25;
+  will-change: transform;
+}
+
+.animated-bg__blob--1 {
+  width: 420px;
+  height: 420px;
+  background: var(--color-primary);
+  top: -10%;
+  left: -8%;
+  animation: float1 22s ease-in-out infinite;
+}
+
+.animated-bg__blob--2 {
+  width: 360px;
+  height: 360px;
+  background: var(--color-accent);
+  top: 40%;
+  right: -10%;
+  animation: float2 26s ease-in-out infinite;
+}
+
+.animated-bg__blob--3 {
+  width: 300px;
+  height: 300px;
+  background: var(--color-success);
+  bottom: -8%;
+  left: 30%;
+  animation: float3 30s ease-in-out infinite;
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(60px, 40px) scale(1.1); }
+  66% { transform: translate(-30px, 60px) scale(0.95); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-70px, -50px) scale(1.15); }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(50px, -40px) scale(1.05); }
+  70% { transform: translate(-40px, -20px) scale(0.9); }
+}
+
+/* Respect users who've asked for reduced motion at the OS level */
+@media (prefers-reduced-motion: reduce) {
+  .animated-bg__blob {
+    animation: none;
+  }
+}
+
+/* Hide on very small screens to save battery/performance on mobile */
+@media (max-width: 600px) {
+  .animated-bg {
+    display: none;
+  }
+}
