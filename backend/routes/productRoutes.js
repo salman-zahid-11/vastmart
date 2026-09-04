@@ -9,6 +9,7 @@ const {
   approveProduct,
   getCategories,
   updateProduct,
+  bulkApproveProducts,
 } = require('../controllers/productController');
 const { protect, authorizeRoles } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
