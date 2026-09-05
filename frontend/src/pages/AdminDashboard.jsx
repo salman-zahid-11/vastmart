@@ -36,6 +36,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
 } from 'recharts';
 import { motion, AnimatePresence } from 'framer-motion';
+import AnimatedCounter from '../components/AnimatedCounter';
 import './AdminDashboard.css';
 
 
@@ -608,20 +609,24 @@ function OverviewSection({ stats }) {
       <div className="overview-hero">
         <div className="overview-hero__main">
           <p className="overview-hero__label">Total Revenue</p>
-          <p className="overview-hero__value">৳{Number(revenue.total || 0).toLocaleString()}</p>
-          <p className="overview-hero__sub">Avg. order value: ৳{revenue.avgOrderValue || 0}</p>
+          <p className="overview-hero__value">
+            <AnimatedCounter value={revenue.total || 0} prefix="৳" />
+          </p>
+          <p className="overview-hero__sub">
+            Avg. order value: <AnimatedCounter value={revenue.avgOrderValue || 0} prefix="৳" />
+          </p>
         </div>
         <div className="overview-hero__side">
           <div>
-            <p className="overview-hero__side-value">{orders.total || 0}</p>
+            <p className="overview-hero__side-value"><AnimatedCounter value={orders.total || 0} /></p>
             <p className="overview-hero__side-label">Total Orders</p>
           </div>
           <div>
-            <p className="overview-hero__side-value">{orders.delivered || 0}</p>
+            <p className="overview-hero__side-value"><AnimatedCounter value={orders.delivered || 0} /></p>
             <p className="overview-hero__side-label">Delivered</p>
           </div>
           <div>
-            <p className="overview-hero__side-value">{orders.pending || 0}</p>
+            <p className="overview-hero__side-value"><AnimatedCounter value={orders.pending || 0} /></p>
             <p className="overview-hero__side-label">In Progress</p>
           </div>
         </div>
@@ -675,7 +680,7 @@ function MiniStat({ label, value, warn, good }) {
   return (
     <div className="mini-stat">
       <span className={`mini-stat__value ${warn ? 'mini-stat__value--warn' : ''} ${good ? 'mini-stat__value--good' : ''}`}>
-        {value ?? 0}
+        <AnimatedCounter value={value ?? 0} />
       </span>
       <span className="mini-stat__label">{label}</span>
     </div>

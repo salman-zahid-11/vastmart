@@ -7,6 +7,7 @@ import BannerCarousel from '../components/BannerCarousel';
 import CategoryGrid from '../components/CategoryGrid';
 import Reveal from '../components/Reveal';
 import StaggerGrid, { StaggerItem } from '../components/StaggerGrid';
+import { SkeletonGrid } from '../components/Skeleton';
 import './Home.css';
 
 function Home() {
@@ -80,7 +81,7 @@ function Home() {
           <FilterSidebar filters={filters} onChange={setFilters} onClear={handleClearFilters} />
 
           <div className="products-section__results">
-            {loading && <p className="products-section__message">Loading products...</p>}
+        {loading && <SkeletonGrid count={8} />}
             {error && <p className="products-section__message products-section__message--error">{error}</p>}
 
             {!loading && !error && products.length === 0 && (

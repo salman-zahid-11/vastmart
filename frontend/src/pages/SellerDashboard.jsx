@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getMyProducts } from '../services/productService';
 import { getMySales } from '../services/orderService';
 import { getAbandonedActivity } from '../services/activityService';
+import AnimatedCounter from '../components/AnimatedCounter';
 import './Dashboard.css';
 
 function SellerDashboard() {
@@ -181,10 +182,15 @@ function SellerDashboard() {
 }
 
 function StatCard({ label, value, accent }) {
+  const isRevenue = typeof value === 'string' && value.startsWith('৳');
+  const numericValue = isRevenue ? Number(value.replace(/[৳,]/g, '')) : value;
+
   return (
     <div className={`stat-card ${accent ? 'stat-card--accent' : ''}`}>
       <p className="stat-card__label">{label}</p>
-      <p className="stat-card__value">{value}</p>
+      <p className="stat-card__value">
+        <AnimatedCounter value={numericValue} prefix={isRevenue ? '৳' : ''} />
+      </p>
     </div>
   );
 }
