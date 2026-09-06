@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getActiveBanners } from '../services/bannerService';
+import MagneticButton from './MagneticButton';
 import './BannerCarousel.css';
 
 function BannerCarousel() {
@@ -45,7 +46,9 @@ function BannerCarousel() {
                     {slide.title && <h2 className="banner-carousel__title">{slide.title}</h2>}
                     {slide.subtitle && <p className="banner-carousel__subtitle">{slide.subtitle}</p>}
                     {slide.ctaLabel && slide.ctaLink && (
-                      <a href={slide.ctaLink} className="banner-carousel__cta">{slide.ctaLabel}</a>
+                      <MagneticButton as="a" href={slide.ctaLink} className="banner-carousel__cta" strength={0.2}>
+                        {slide.ctaLabel}
+                      </MagneticButton>
                     )}
                   </div>
                 </>

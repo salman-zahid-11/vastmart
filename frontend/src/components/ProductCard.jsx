@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
+import TiltCard from './TiltCard';
 import './ProductCard.css';
 
 function ProductCard({ product }) {
   const hasDiscount = Boolean(product.discountPrice);
 
   return (
-    <Link to={`/products/${product._id}`} className="product-card">
-      <div className="product-card__image-wrap">
+    <TiltCard className="product-card-tilt-wrap" maxTilt={6}>
+      <Link to={`/products/${product._id}`} className="product-card">
+        <div className="product-card__image-wrap">
         <img
           src={product.images?.[0] || 'https://via.placeholder.com/400'}
           alt={product.name}
@@ -24,8 +26,9 @@ function ProductCard({ product }) {
           <span className="product-card__price">৳{product.discountPrice || product.price}</span>
           {hasDiscount && <span className="product-card__price-strike">৳{product.price}</span>}
         </div>
-      </div>
-    </Link>
+        </div>
+      </Link>
+    </TiltCard>
   );
 }
 

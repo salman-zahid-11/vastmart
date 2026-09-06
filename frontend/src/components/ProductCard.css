@@ -92,3 +92,12 @@
   color: var(--color-ink-faint);
   text-decoration: line-through;
 }
+.product-card-tilt-wrap {
+  transform-style: preserve-3d;
+}
+
+@media (max-width: 850px) {
+  .product-card-tilt-wrap {
+    transform: none !important;
+  }
+}

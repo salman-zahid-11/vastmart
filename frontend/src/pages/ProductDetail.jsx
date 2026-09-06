@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import ImageGallery from '../components/ImageGallery';
 import { trackActivity } from '../services/activityService';
 import { motion } from 'framer-motion';
+import MagneticButton from '../components/MagneticButton';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -122,13 +123,15 @@ function ProductDetail() {
             {adding ? 'Adding...' : 'Add to Cart'}
           </button>
 
-          <button
+          <MagneticButton
+            as="button"
             onClick={handleBuyNow}
             disabled={product.stock === 0 || adding}
             className="product-detail__cta"
+            strength={0.25}
           >
             Place Order
-          </button>
+          </MagneticButton>
         </div>
 
         {message && <p className="product-detail__feedback">{message}</p>}
