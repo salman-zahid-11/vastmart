@@ -21,6 +21,7 @@ import SupportTickets from './pages/SupportTickets';
 import NewTicket from './pages/NewTicket';
 import TicketDetail from './pages/TicketDetail';
 import AnimatedBackground from './components/AnimatedBackground';
+import ScrollProgress from './components/ScrollProgress';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -38,8 +39,8 @@ function App() {
   return (
     <div>
       {/* Animated background - stays fixed behind the entire application */}
+      <ScrollProgress />
       <AnimatedBackground />
-
       <TopBar />
       <Header />
       <CategoryNav />

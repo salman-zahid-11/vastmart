@@ -1,11 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getActiveBanners } from '../services/bannerService';
 import MagneticButton from './MagneticButton';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { useRef } from 'react';
 import './BannerCarousel.css';
 
 function BannerCarousel() {
   const [slides, setSlides] = useState([]);
   const [index, setIndex] = useState(0);
+  const containerRef = useRef(null);
+
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start start', 'end start'],
+  });
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ['0%', '25%']);
 
   useEffect(() => {
     getActiveBanners()
@@ -26,7 +35,7 @@ function BannerCarousel() {
   if (slides.length === 0) return null;
 
   return (
-    <div className="banner-carousel">
+    <div className="banner-carousel" ref={containerRef}>
       <div className="banner-carousel__viewport">
         <div
           className="banner-carousel__track"
@@ -36,8 +45,11 @@ function BannerCarousel() {
             <div
               key={slide._id}
               className={`banner-carousel__slide ${slide.fullImage ? 'banner-carousel__slide--full-image' : ''}`}
-              style={{ backgroundImage: `url(${slide.image})` }}
             >
+              <motion.div
+                className="banner-carousel__slide-bg"
+                style={{ backgroundImage: `url(${slide.image})`, y: parallaxY }}
+              />
               {!slide.fullImage && (
                 <>
                   <div className="banner-carousel__overlay"></div>
