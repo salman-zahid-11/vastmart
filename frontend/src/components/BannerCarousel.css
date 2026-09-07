@@ -26,22 +26,25 @@
 
 /* Each slide = EXACTLY the viewport width */
 .banner-carousel__slide {
+  flex: 0 0 100%;
+  width: 100%;
   min-width: 100%;
-  min-height: 340px;
+  height: 380px;
+
   padding: 56px 64px;
-  color: white;
+
   position: relative;
   display: flex;
   align-items: center;
-  overflow: hidden;
-}
 
-.banner-carousel__slide-bg {
-  position: absolute;
-  inset: -15% 0;
+  color: white;
+
   background-size: cover;
   background-position: center;
-  will-change: transform;
+  background-repeat: no-repeat;
+
+  /* VERY IMPORTANT */
+  box-sizing: border-box;
 }
 
 /* Image overlay */
