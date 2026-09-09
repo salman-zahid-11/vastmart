@@ -8,6 +8,7 @@ import CategoryGrid from '../components/CategoryGrid';
 import Reveal from '../components/Reveal';
 import StaggerGrid, { StaggerItem } from '../components/StaggerGrid';
 import { SkeletonGrid } from '../components/Skeleton';
+import ScrollingProductRow from '../components/ScrollingProductRow';
 import './Home.css';
 
 function Home() {
@@ -58,6 +59,9 @@ function Home() {
       <BannerCarousel />
       <Reveal>
         <CategoryGrid />
+              {!loading && products.length > 0 && (
+        <ScrollingProductRow title="Trending Now" products={products.slice(0, 12)} />
+      )}
       </Reveal>
 
       <section id="products" className="products-section">
