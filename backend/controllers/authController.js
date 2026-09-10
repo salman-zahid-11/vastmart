@@ -117,11 +117,26 @@ const loginUser = async (req, res) => {
     }
 
 
+
+/*
      await logActivity({
       user,
       action: 'user_login',
       description: `${user.name} logged in`,
     });
+*/
+
+
+try {
+  await logActivity({
+    user,
+    action: 'user_login',
+    description: `${user.name} logged in`,
+  });
+} catch (activityError) {
+  console.error('LOGIN ACTIVITY LOG ERROR:', activityError);
+}
+
 
     // 4. Generate token & respond
     res.status(200).json({
