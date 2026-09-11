@@ -184,12 +184,12 @@
   }
 
   .banner-carousel__track {
-    height: 350px;
+    height: 240px;
   }
 
   .banner-carousel__slide {
-    height: 350px;
-    padding: 45px;
+    height: 240px;
+    padding: 28px;
   }
 
 }
@@ -207,11 +207,11 @@
   }
 
   .banner-carousel__track {
-    height: 220px;
+    height: 200px;
   }
 
   .banner-carousel__slide {
-    height: 220px;
+    height: 200px;
     padding: 24px 20px;
   }
 
@@ -232,7 +232,7 @@
 @media (max-width: 480px) {
   .banner-carousel__track,
   .banner-carousel__slide {
-    height: 180px;
+    height: 160px;
   }
 
   .banner-carousel__dots {
