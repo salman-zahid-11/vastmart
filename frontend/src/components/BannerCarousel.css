@@ -228,6 +228,12 @@
 
 .banner-carousel__slide--full-image {
   padding: 0;
+}
+
+/* Full artwork should use the entire banner area instead of being cropped by
+   the cover sizing used by text slides. */
+.banner-carousel__slide--full-image .banner-carousel__slide-bg {
+  inset: 0;
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
