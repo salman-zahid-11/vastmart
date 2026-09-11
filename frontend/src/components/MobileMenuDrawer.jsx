@@ -1,11 +1,16 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getCategories } from '../services/productService';
 import './MobileMenuDrawer.css';
-
-const CATEGORIES = ['Electronics', 'Fashion', 'Home & Living', 'Beauty', 'Groceries', 'Sports', 'Books'];
 
 function MobileMenuDrawer({ isOpen, onClose }) {
   const { user } = useAuth();
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
 
   if (!isOpen) return null;
 
@@ -26,10 +31,10 @@ function MobileMenuDrawer({ isOpen, onClose }) {
 
         <div className="mobile-drawer__section">
           <Link to="/" onClick={onClose} className="mobile-drawer__link mobile-drawer__link--bold">All Products</Link>
-          {CATEGORIES.map((cat) => (
+          {categories.map((cat) => (
             <Link
               key={cat}
-              to={`/?search=${encodeURIComponent(cat)}`}
+              to={`/?category=${encodeURIComponent(cat)}`}
               onClick={onClose}
               className="mobile-drawer__link"
             >
