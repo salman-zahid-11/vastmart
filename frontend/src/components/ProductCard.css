@@ -101,3 +101,30 @@
     transform: none !important;
   }
 }
+
+@media (max-width: 600px) {
+  .product-card__body {
+    padding: 10px;
+  }
+
+  .product-card__category {
+    font-size: 10px;
+  }
+
+  .product-card__name {
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .product-card__price-row {
+    gap: 5px;
+  }
+
+  .product-card__price {
+    font-size: 14px;
+  }
+
+  .product-card__price-strike {
+    font-size: 11px;
+  }
+}
