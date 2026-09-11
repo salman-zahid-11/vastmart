@@ -15,6 +15,11 @@ export const approveProduct = async (productId, isApproved) => {
   return response.data;
 };
 
+export const setTrendingProduct = async (productId, isTrending) => {
+  const response = await api.put(`/products/admin/${productId}/trending`, { isTrending });
+  return response.data;
+};
+
 export const getAllUsers = async () => {
   const response = await api.get('/admin/users');
   return response.data;

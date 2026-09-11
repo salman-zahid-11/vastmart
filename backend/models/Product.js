@@ -64,6 +64,10 @@ const productSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    isTrending: {
+      type: Boolean,
+      default: false,
+    },
     isApproved: {
       type: Boolean,
       default: false, // admin must approve before it's publicly visible

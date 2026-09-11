@@ -7,7 +7,7 @@ import ImageGallery from '../components/ImageGallery';
 import { trackActivity } from '../services/activityService';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
-import { getProductReviews } from '../services/reviewService';
+import { createReview, getProductReviews } from '../services/reviewService';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -24,6 +24,10 @@ function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '' });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const canReview = user?.role === 'customer';
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -59,6 +63,10 @@ function ProductDetail() {
       navigate('/login');
       return;
     }
+    if (!canReview) {
+      setReviewMessage('Only customer accounts can submit product reviews.');
+      return;
+    }
 
     setAdding(true);
     setMessage('');
@@ -88,6 +96,38 @@ function ProductDetail() {
     } catch (err) {
       setMessage(err.response?.data?.message || 'Failed to proceed to checkout');
       setAdding(false);
+    }
+  };
+
+  const handleReviewSubmit = async (event) => {
+    event.preventDefault();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewMessage('');
+    try {
+      const review = await createReview({
+        product: product._id,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment,
+      });
+      setReviews((current) => [review, ...current]);
+      setProduct((current) => ({
+        ...current,
+        ratingsAverage: current.numReviews
+          ? ((current.ratingsAverage * current.numReviews + review.rating) / (current.numReviews + 1))
+          : review.rating,
+        numReviews: (current.numReviews || 0) + 1,
+      }));
+      setReviewForm({ rating: 5, comment: '' });
+      setReviewMessage('Thank you. Your review has been published.');
+    } catch (err) {
+      setReviewMessage(err.response?.data?.message || 'Unable to publish your review.');
+    } finally {
+      setReviewSubmitting(false);
     }
   };
 
@@ -264,6 +304,55 @@ Please confirm and arrange delivery. Thank you!`);
             ))}
           </div>
         )}
+        <form className="product-detail__review-form" onSubmit={handleReviewSubmit}>
+          <div className="product-detail__review-form-heading">
+            <div>
+              <h3>{canReview ? 'Share your experience' : 'Want to leave a review?'}</h3>
+              <p>
+                {canReview
+                  ? `Reviewing as ${user.name}`
+                  : user?.role === 'admin'
+                    ? 'Use the admin dashboard to publish a customer review.'
+                    : 'Log in as a customer to rate and review this product.'}
+              </p>
+            </div>
+            {!user && (
+              <button type="button" className="product-detail__review-login" onClick={() => navigate('/login')}>
+                Log in
+              </button>
+            )}
+          </div>
+          <div className="product-detail__review-form-fields">
+            <div className="product-detail__rating-picker" aria-label="Choose a rating">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={value <= reviewForm.rating ? 'is-selected' : ''}
+                  onClick={() => setReviewForm((current) => ({ ...current, rating: value }))}
+                  aria-label={`${value} star${value === 1 ? '' : 's'}`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={reviewForm.comment}
+              onChange={(event) => setReviewForm((current) => ({ ...current, comment: event.target.value }))}
+              placeholder="Tell other customers what you think..."
+              rows="4"
+              maxLength="1000"
+              required
+              disabled={!canReview || reviewSubmitting}
+            />
+          </div>
+          <div className="product-detail__review-form-footer">
+            {reviewMessage && <p>{reviewMessage}</p>}
+            <button type="submit" className="product-detail__review-submit" disabled={!canReview || reviewSubmitting}>
+              {reviewSubmitting ? 'Publishing...' : 'Submit Review'}
+            </button>
+          </div>
+        </form>
       </section>
 
       {relatedProducts.length > 0 && (

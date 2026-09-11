@@ -3,6 +3,7 @@ import {
   getDashboardStats,
   getAllProductsAdmin,
   approveProduct,
+  setTrendingProduct,
   getAllUsers,
   updateUserStatus,
   getAllOrdersAdmin,
@@ -1407,6 +1408,17 @@ function ProductsSection({ products, setProducts, refreshStats }) {
       setUpdatingId(null);
     }
   };
+  const handleTrending = async (productId, isTrending) => {
+    setUpdatingId(productId);
+    try {
+      const updated = await setTrendingProduct(productId, isTrending);
+      setProducts((prev) => prev.map((p) => (p._id === productId ? updated : p)));
+    } catch (err) {
+      console.error('Failed to update trending status', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
   const toggleSelect = (id) => {
     setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   };
@@ -1474,6 +1486,7 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                 <th>Product</th>
                 <th>Seller</th>
                 <th>Price</th>
+                <th>Trending</th>
                 <th>Status</th>
                 <th>Action</th>
               </tr>
@@ -1497,6 +1510,15 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                     </td>
                     <td>{product.seller?.name || 'Unknown'}</td>
                     <td className="admin-table__mono">৳{product.price}</td>
+                    <td>
+                      <button
+                        disabled={isUpdating || !product.isApproved}
+                        onClick={() => handleTrending(product._id, !product.isTrending)}
+                        className={`dashboard__action-btn ${product.isTrending ? 'dashboard__action-btn--success' : ''}`}
+                      >
+                        {product.isTrending ? 'Featured' : 'Add'}
+                      </button>
+                    </td>
                     <td>
                       {product.isApproved ? (
                         <span className="pill pill--success">Approved</span>

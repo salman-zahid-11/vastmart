@@ -6,12 +6,14 @@ import FilterSidebar from '../components/FilterSidebar';
 import BannerCarousel from '../components/BannerCarousel';
 import StaggerGrid, { StaggerItem } from '../components/StaggerGrid';
 import { SkeletonGrid } from '../components/Skeleton';
+import ScrollingProductRow from '../components/ScrollingProductRow';
 import './Home.css';
 
 function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [trendingProducts, setTrendingProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const pageSize = 20;
@@ -21,6 +23,22 @@ function Home() {
 
   const [filters, setFilters] = useState({ category: categoryFromUrl, minPrice: '', maxPrice: '' });
   const [sort, setSort] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    getAllProducts({ trending: true, limit: 12 })
+      .then((data) => {
+        if (!active) return;
+        setTrendingProducts(Array.isArray(data) ? data : data.products || []);
+      })
+      .catch(() => {
+        if (active) setTrendingProducts([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     setFilters((prev) => ({ ...prev, category: categoryFromUrl }));
@@ -84,6 +102,9 @@ function Home() {
   return (
     <div>
       <BannerCarousel />
+      {trendingProducts.length > 0 && (
+        <ScrollingProductRow title="Trending Now" products={trendingProducts} />
+      )}
 
       <section id="products" className="products-section">
         <div className="products-section__header">

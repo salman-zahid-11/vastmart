@@ -7,6 +7,7 @@ const {
   getMyProducts,
   getAllProductsAdmin,
   approveProduct,
+  setTrendingProduct,
   getCategories,
   updateProduct,
   bulkApproveProducts,
@@ -20,6 +21,7 @@ router.get('/categories', getCategories);
 router.get('/seller/my-products', protect, authorizeRoles('seller', 'admin'), getMyProducts);
 router.get('/admin/all', protect, authorizeRoles('admin'), getAllProductsAdmin);
 router.put('/admin/:id/approve', protect, authorizeRoles('admin'), approveProduct);
+router.put('/admin/:id/trending', protect, authorizeRoles('admin'), setTrendingProduct);
 router.put('/:id', protect, authorizeRoles('seller', 'admin'), upload.array('images', 5), updateProduct);
 router.put('/admin/bulk-approve', protect, authorizeRoles('admin'), bulkApproveProducts);
 router.get('/:id', getProductById);

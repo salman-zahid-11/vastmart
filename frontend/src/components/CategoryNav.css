@@ -53,6 +53,11 @@
 
 @media (max-width: 850px) {
   .category-nav {
-    display: none;
+    top: 54px;
+  }
+
+  .category-nav__inner {
+    gap: var(--space-md);
+    padding: 8px var(--space-md);
   }
 }

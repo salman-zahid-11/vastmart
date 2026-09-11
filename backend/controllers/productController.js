@@ -132,12 +132,13 @@ const updateProduct = async (req, res) => {
 // @route  GET /api/products
 const getProducts = async (req, res) => {
   try {
-    const { search, category, minPrice, maxPrice, sort, brand } = req.query;
+    const { search, category, minPrice, maxPrice, sort, brand, trending } = req.query;
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
     const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
     const isPaginated = req.query.page !== undefined || req.query.limit !== undefined;
 
     const filter = { isApproved: true, isActive: true };
+    if (trending === 'true') filter.isTrending = true;
 
     // Text search across name, description, and tags
     if (search) {
@@ -192,6 +193,22 @@ const getProducts = async (req, res) => {
 
     const products = await query;
     res.status(200).json(products);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const setTrendingProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { isTrending: Boolean(req.body.isTrending) },
+      { new: true }
+    ).populate('seller', 'name email');
+
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.status(200).json(product);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -325,4 +342,4 @@ const bulkApproveProducts = async (req, res) => {
   }
 };
 
-module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, getCategories, updateProduct, bulkApproveProducts };
+module.exports = { createProduct, getProducts, getProductById, getMyProducts, getAllProductsAdmin, approveProduct, setTrendingProduct, getCategories, updateProduct, bulkApproveProducts };

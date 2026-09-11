@@ -49,7 +49,7 @@ const createReview = async (req, res) => {
   try {
     const { product, customerName, customerRole, customerAvatar, comment, rating } = req.body;
     const numericRating = Number(rating);
-    if (!product || !customerName || !comment || !Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
+    if (!product || (req.user.role === 'admin' && !customerName) || !comment || !Number.isInteger(numericRating) || numericRating < 1 || numericRating > 5) {
       return res.status(400).json({ message: 'Product, customer name, comment, and rating are required' });
     }
 
@@ -60,9 +60,9 @@ const createReview = async (req, res) => {
 
     const review = await Review.create({
       product,
-      customerName,
-      customerRole,
-      customerAvatar,
+      customerName: req.user.role === 'customer' ? req.user.name : customerName,
+      customerRole: req.user.role === 'customer' ? 'Customer' : customerRole,
+      customerAvatar: req.user.role === 'customer' ? req.user.avatar : customerAvatar,
       comment,
       rating: numericRating,
       createdBy: req.user._id,
