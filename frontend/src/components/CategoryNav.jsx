@@ -1,17 +1,15 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getCategories } from '../services/productService';
 import './CategoryNav.css';
 
-const CATEGORIES = [
-  'Electronics',
-  'Fashion',
-  'Home & Living',
-  'Beauty',
-  'Groceries',
-  'Sports',
-  'Books',
-];
-
 function CategoryNav() {
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories).catch(() => setCategories([]));
+  }, []);
+
   return (
     <nav className="category-nav">
       <div className="category-nav__inner">
@@ -24,7 +22,7 @@ function CategoryNav() {
           </svg>
           All Products
         </Link>
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
   <Link key={cat} to={`/?category=${encodeURIComponent(cat)}`} className="category-nav__link">
     {cat}
   </Link>
