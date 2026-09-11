@@ -94,6 +94,18 @@
   color: var(--color-primary);
 }
 
+.site-header__filter-button {
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  padding: 7px 12px;
+  background: var(--color-canvas-raised);
+}
+
+.site-header__filter-button span:first-child {
+  font-size: 20px;
+  line-height: 18px;
+}
+
 .site-header__cart-icon-wrap {
   position: relative;
 }
@@ -234,6 +246,10 @@
 
   .site-header__actions .site-header__action:not(.site-header__account button) {
     display: none;
+  }
+
+  .site-header__filter-button {
+    display: none !important;
   }
 
   .site-header__actions > a.site-header__action {

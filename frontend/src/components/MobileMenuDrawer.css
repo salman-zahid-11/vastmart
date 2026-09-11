@@ -104,6 +104,14 @@
   color: var(--color-primary);
 }
 
+.mobile-drawer__link--filter {
+  width: 100%;
+  text-align: left;
+  color: var(--color-primary);
+  font-weight: 700;
+  background: var(--color-primary-tint);
+}
+
 .mobile-drawer__quicklinks-title {
   font-size: 12px;
   font-weight: 700;

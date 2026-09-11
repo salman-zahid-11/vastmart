@@ -161,6 +161,14 @@ function Header() {
             </span>
             <span>Cart</span>
           </Link>
+          <button
+            type="button"
+            className="site-header__action site-header__filter-button"
+            onClick={() => window.dispatchEvent(new CustomEvent('vastmart:toggle-filters'))}
+          >
+            <span aria-hidden="true">☷</span>
+            <span>Filters</span>
+          </button>
 
           {user ? (
             <div className="site-header__account" ref={menuRef}>

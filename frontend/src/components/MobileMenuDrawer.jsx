@@ -30,6 +30,16 @@ function MobileMenuDrawer({ isOpen, onClose }) {
         </div>
 
         <div className="mobile-drawer__section">
+          <button
+            type="button"
+            className="mobile-drawer__link mobile-drawer__link--filter"
+            onClick={() => {
+              onClose();
+              window.dispatchEvent(new CustomEvent('vastmart:toggle-filters'));
+            }}
+          >
+            ☷ &nbsp; Filters
+          </button>
           <Link to="/" onClick={onClose} className="mobile-drawer__link mobile-drawer__link--bold">All Products</Link>
           {categories.map((cat) => (
             <Link

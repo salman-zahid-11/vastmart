@@ -14,6 +14,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [trendingProducts, setTrendingProducts] = useState([]);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const pageSize = 20;
@@ -26,18 +27,35 @@ function Home() {
 
   useEffect(() => {
     let active = true;
-    getAllProducts({ trending: true, limit: 12 })
-      .then((data) => {
+    const loadTrending = async () => {
+      try {
+        const featuredData = await getAllProducts({ trending: true, limit: 12 });
+        const featured = Array.isArray(featuredData) ? featuredData : featuredData.products || [];
+        if (featured.length > 0) {
+          if (active) setTrendingProducts(featured);
+          return;
+        }
+
+        const fallbackData = await getAllProducts({ page: 1, limit: 12 });
+        if (active) {
+          setTrendingProducts(Array.isArray(fallbackData) ? fallbackData : fallbackData.products || []);
+        }
+      } catch (error) {
         if (!active) return;
-        setTrendingProducts(Array.isArray(data) ? data : data.products || []);
-      })
-      .catch(() => {
-        if (active) setTrendingProducts([]);
-      });
+        setTrendingProducts([]);
+      }
+    };
+    loadTrending();
 
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const toggleFilters = () => setFiltersOpen((open) => !open);
+    window.addEventListener('vastmart:toggle-filters', toggleFilters);
+    return () => window.removeEventListener('vastmart:toggle-filters', toggleFilters);
   }, []);
 
   useEffect(() => {
@@ -124,7 +142,14 @@ function Home() {
         </div>
 
         <div className="products-section__layout">
-          <FilterSidebar filters={filters} onChange={setFilters} onClear={handleClearFilters} />
+          {filtersOpen && <div className="filter-backdrop" onClick={() => setFiltersOpen(false)} />}
+          <FilterSidebar
+            filters={filters}
+            onChange={setFilters}
+            onClear={handleClearFilters}
+            isOpen={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+          />
 
           <div className="products-section__results">
         {loading && <SkeletonGrid count={8} />}

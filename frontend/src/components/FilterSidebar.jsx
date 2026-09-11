@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getCategories } from '../services/productService';
 import './FilterSidebar.css';
 
-function FilterSidebar({ filters, onChange, onClear }) {
+function FilterSidebar({ filters, onChange, onClear, isOpen = true, onClose }) {
   const [categories, setCategories] = useState([]);
   const [priceInputs, setPriceInputs] = useState({
     minPrice: filters.minPrice || '',
@@ -24,9 +24,10 @@ function FilterSidebar({ filters, onChange, onClear }) {
   const hasActiveFilters = filters.category || filters.minPrice || filters.maxPrice;
 
   return (
-    <aside className="filter-sidebar">
+    <aside className={`filter-sidebar ${isOpen ? 'filter-sidebar--open' : ''}`}>
       <div className="filter-sidebar__header">
         <h3>Filters</h3>
+        <button type="button" className="filter-sidebar__close" onClick={onClose}>×</button>
         {hasActiveFilters && (
           <button onClick={onClear} className="filter-sidebar__clear">Clear all</button>
         )}
