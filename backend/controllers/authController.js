@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
-const generateToken = require('../utils/generateToken');
+const { generateAccessToken } = require('../utils/generateToken');
 const crypto = require('crypto');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
@@ -48,7 +48,7 @@ const registerUser = async (req, res) => {
       role: user.role,
       adminLevel: user.adminLevel,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token: generateAccessToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -146,7 +146,7 @@ try {
       role: user.role,
       adminLevel: user.adminLevel,
       avatar: user.avatar,
-      token: generateToken(user._id),
+      token: generateAccessToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
