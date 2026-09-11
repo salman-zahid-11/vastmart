@@ -6,7 +6,6 @@ import { useAuth } from '../context/AuthContext';
 import ImageGallery from '../components/ImageGallery';
 import { trackActivity } from '../services/activityService';
 import { motion } from 'framer-motion';
-import MagneticButton from '../components/MagneticButton';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -20,6 +19,7 @@ function ProductDetail() {
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState('');
+  const [quantity, setQuantity] = useState(1);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -46,7 +46,7 @@ function ProductDetail() {
     setAdding(true);
     setMessage('');
     try {
-      await addItem(product._id, 1);
+      await addItem(product._id, quantity);
       trackActivity(product._id, 'added_to_cart');
       setMessage('Added to cart!');
     } catch (err) {
@@ -65,7 +65,7 @@ function ProductDetail() {
     setAdding(true);
     setMessage('');
     try {
-      await addItem(product._id, 1);
+      await addItem(product._id, quantity);
       trackActivity(product._id, 'added_to_cart');
       navigate('/checkout');
     } catch (err) {
@@ -79,6 +79,11 @@ function ProductDetail() {
   if (!product) return null;
 
   const hasDiscount = Boolean(product.discountPrice);
+  const currentPrice = product.discountPrice || product.price;
+  const whatsappNumber = '8801570263779';
+  const whatsappMessage = encodeURIComponent(
+    `Hello VastMart, I want to order ${product.name} (quantity: ${quantity}).`,
+  );
 
   return (
     <motion.div
@@ -96,43 +101,72 @@ function ProductDetail() {
       </motion.div>
 
       <div className="product-detail__info">
-        <p className="product-detail__category">
-          {product.category}{product.subCategory ? ` / ${product.subCategory}` : ''}
-        </p>
         <h1 className="product-detail__name">{product.name}</h1>
 
         <div className="product-detail__price-row">
-          <span className="product-detail__price">৳{product.discountPrice || product.price}</span>
+          <span className="product-detail__price">৳{currentPrice}</span>
           {hasDiscount && <span className="product-detail__price-strike">৳{product.price}</span>}
         </div>
 
-        <p className={`product-detail__stock ${product.stock > 0 ? 'in-stock' : 'out-stock'}`}>
-          {product.stock > 0 ? `In Stock — ${product.stock} available` : 'Out of Stock'}
-        </p>
+        <div className="product-detail__quantity">
+          <span>Quantity:</span>
+          <div className="product-detail__quantity-control">
+            <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} aria-label="Decrease quantity">−</button>
+            <span>{quantity}</span>
+            <button
+              type="button"
+              onClick={() => setQuantity((value) => Math.min(product.stock, value + 1))}
+              disabled={product.stock === 0 || quantity >= product.stock}
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+        </div>
 
-        <p className="product-detail__description">{product.description}</p>
-
-        <p className="product-detail__seller">Sold by <strong>{product.seller?.name || 'Unknown Seller'}</strong></p>
-
-        <div className="product-detail__cta-row">
+        <div className="product-detail__cta-grid">
           <button
             onClick={handleAddToCart}
             disabled={product.stock === 0 || adding}
-            className="product-detail__cta product-detail__cta--secondary"
+            className="product-detail__cta product-detail__cta--cart"
           >
-            {adding ? 'Adding...' : 'Add to Cart'}
+            {adding ? 'Adding...' : '🛍 Add to Cart'}
           </button>
 
-          <MagneticButton
-            as="button"
+          <button
             onClick={handleBuyNow}
             disabled={product.stock === 0 || adding}
-            className="product-detail__cta"
-            strength={0.25}
+            className="product-detail__cta product-detail__cta--buy"
           >
-            Place Order
-          </MagneticButton>
+            Buy Now
+          </button>
         </div>
+
+        <div className="product-detail__contact-grid">
+          <a
+            href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+            target="_blank"
+            rel="noreferrer"
+            className="product-detail__contact product-detail__contact--whatsapp"
+          >
+            <span>◉</span> Order on WhatsApp
+          </a>
+          <a href="tel:+8801570263779" className="product-detail__contact product-detail__contact--call">
+            <span>☎</span> Call for Order
+          </a>
+        </div>
+
+        {product.brand && (
+          <p className="product-detail__brand"><strong>Brand:</strong> {product.brand}</p>
+        )}
+        <details className="product-detail__details" open>
+          <summary>Product Details</summary>
+          <p>{product.description}</p>
+          <p className={`product-detail__stock ${product.stock > 0 ? 'in-stock' : 'out-stock'}`}>
+            {product.stock > 0 ? `In Stock — ${product.stock} available` : 'Out of Stock'}
+          </p>
+          <p className="product-detail__seller">Sold by <strong>{product.seller?.name || 'Unknown Seller'}</strong></p>
+        </details>
 
         {message && <p className="product-detail__feedback">{message}</p>}
       </div>
