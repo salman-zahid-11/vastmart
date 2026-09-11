@@ -29,10 +29,14 @@ function Home() {
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
+      setError('');
       try {
         const params = {};
         if (searchQuery) params.search = searchQuery;
-        if (filters.category) params.category = filters.category;
+        // Use the URL category immediately when navigation comes from the
+        // category menu, rather than waiting for local filter state to sync.
+        const category = categoryFromUrl || filters.category;
+        if (category) params.category = category;
         if (filters.minPrice) params.minPrice = filters.minPrice;
         if (filters.maxPrice) params.maxPrice = filters.maxPrice;
         if (sort) params.sort = sort;
@@ -47,7 +51,14 @@ function Home() {
     };
 
     fetchProducts();
-  }, [searchQuery, filters, sort]);
+  }, [
+    searchQuery,
+    categoryFromUrl,
+    filters.category,
+    filters.minPrice,
+    filters.maxPrice,
+    sort,
+  ]);
 
   const handleClearFilters = () => {
     setFilters({ category: '', minPrice: '', maxPrice: '' });
