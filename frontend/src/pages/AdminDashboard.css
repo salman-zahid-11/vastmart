@@ -280,6 +280,7 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   padding: var(--space-lg);
+  min-width: 0;
   transition: opacity var(--duration-fast) var(--ease-out);
 }
 
@@ -377,6 +378,60 @@
   border-radius: var(--radius-sm);
   background: var(--color-canvas-raised);
   color: var(--color-ink);
+}
+
+@media (max-width: 700px) {
+  .admin-content__header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .admin-content__header .admin-tabs {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+  }
+
+  .admin-content__header .admin-tab {
+    flex: 1 0 auto;
+    white-space: nowrap;
+  }
+
+  .application-card {
+    padding: var(--space-md);
+    overflow: hidden;
+  }
+
+  .application-card__header {
+    align-items: flex-start;
+    gap: var(--space-sm);
+  }
+
+  .application-card__header > div {
+    min-width: 0;
+  }
+
+  .application-card__header h4,
+  .application-card__meta,
+  .application-card__field p {
+    overflow-wrap: anywhere;
+  }
+
+  .application-card__body {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
+
+  .application-card__documents,
+  .application-card__actions,
+  .application-card__reject-form {
+    flex-wrap: wrap;
+  }
+
+  .application-card__reject-form input {
+    flex-basis: 100%;
+  }
 }
 
 
