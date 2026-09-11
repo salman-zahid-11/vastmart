@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProductById } from '../services/productService';
+import { getAllProducts, getProductById } from '../services/productService';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import ImageGallery from '../components/ImageGallery';
 import { trackActivity } from '../services/activityService';
 import { motion } from 'framer-motion';
+import ProductCard from '../components/ProductCard';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -20,6 +21,7 @@ function ProductDetail() {
   const [adding, setAdding] = useState(false);
   const [message, setMessage] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -27,6 +29,8 @@ function ProductDetail() {
         const data = await getProductById(id);
         setProduct(data);
         trackActivity(id, 'viewed');
+        const related = await getAllProducts({ category: data.category });
+        setRelatedProducts(related.filter((item) => item._id !== data._id).slice(0, 5));
       } catch (err) {
         setError('Product not found');
       } finally {
@@ -107,20 +111,25 @@ Please confirm and arrange delivery. Thank you!`);
 
   return (
     <motion.div
-      className="product-detail"
+      className="product-detail-page"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <ImageGallery images={product.images} />
-      </motion.div>
+      <p className="product-detail__breadcrumb">
+        Home <span>›</span> Products <span>›</span> {product.category}
+      </p>
 
-      <div className="product-detail__info">
+      <div className="product-detail">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <ImageGallery images={product.images} />
+        </motion.div>
+
+        <div className="product-detail__info">
         <h1 className="product-detail__name">{product.name}</h1>
 
         <div className="product-detail__price-row">
@@ -179,17 +188,38 @@ Please confirm and arrange delivery. Thank you!`);
         {product.brand && (
           <p className="product-detail__brand"><strong>Brand:</strong> {product.brand}</p>
         )}
-        <details className="product-detail__details" open>
-          <summary>Product Details</summary>
-          <p>{product.description}</p>
-          <p className={`product-detail__stock ${product.stock > 0 ? 'in-stock' : 'out-stock'}`}>
-            {product.stock > 0 ? `In Stock — ${product.stock} available` : 'Out of Stock'}
-          </p>
-          <p className="product-detail__seller">Sold by <strong>{product.seller?.name || 'Unknown Seller'}</strong></p>
-        </details>
-
-        {message && <p className="product-detail__feedback">{message}</p>}
+          {message && <p className="product-detail__feedback">{message}</p>}
+        </div>
       </div>
+
+      <section className="product-detail__tabs" aria-label="Product information">
+        <button type="button" className="product-detail__tab product-detail__tab--active">Description</button>
+        <button type="button" className="product-detail__tab" disabled>Customer Reviews (0)</button>
+      </section>
+
+      <section className="product-detail__description-panel">
+        <h2>Product Details</h2>
+        <p>{product.description}</p>
+        <div className="product-detail__spec-grid">
+          <span>Category</span><strong>{product.category}</strong>
+          {product.subCategory && <><span>Sub-category</span><strong>{product.subCategory}</strong></>}
+          {product.brand && <><span>Brand</span><strong>{product.brand}</strong></>}
+          <span>Availability</span><strong>{product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</strong>
+          <span>Sold by</span><strong>{product.seller?.name || 'Unknown Seller'}</strong>
+        </div>
+      </section>
+
+      {relatedProducts.length > 0 && (
+        <section className="product-detail__related">
+          <div className="product-detail__section-heading">
+            <h2>Related Products</h2>
+            <a href={`/?category=${encodeURIComponent(product.category)}`}>More Products →</a>
+          </div>
+          <div className="product-detail__related-grid">
+            {relatedProducts.map((related) => <ProductCard key={related._id} product={related} />)}
+          </div>
+        </section>
+      )}
     </motion.div>
   );
 }
