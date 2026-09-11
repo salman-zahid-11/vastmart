@@ -81,9 +81,29 @@ function ProductDetail() {
   const hasDiscount = Boolean(product.discountPrice);
   const currentPrice = product.discountPrice || product.price;
   const whatsappNumber = '8801570263779';
-  const whatsappMessage = encodeURIComponent(
-    `Hello VastMart, I want to order ${product.name} (quantity: ${quantity}).`,
-  );
+  const orderReference = `VM${Date.now().toString(36).slice(-8).toUpperCase()}`;
+  const customerName = user?.name || 'Guest customer';
+  const customerPhone = user?.phone || 'Not provided';
+  const customerEmail = user?.email || 'Not provided';
+  const itemsTotal = currentPrice * quantity;
+  const whatsappMessage = encodeURIComponent(`Order ID: #${orderReference}
+Customer: ${customerName}
+Phone: ${customerPhone}
+Email: ${customerEmail}
+
+Items:
+* ${product.name} × ${quantity} — ৳${itemsTotal}
+
+Subtotal: ৳${itemsTotal}
+Shipping: ৳60
+Total: ৳${itemsTotal + 60}
+
+Payment Method: COD
+
+Delivery Address:
+To be provided
+
+Please confirm and arrange delivery. Thank you!`);
 
   return (
     <motion.div
