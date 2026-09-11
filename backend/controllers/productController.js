@@ -133,6 +133,9 @@ const updateProduct = async (req, res) => {
 const getProducts = async (req, res) => {
   try {
     const { search, category, minPrice, maxPrice, sort, brand } = req.query;
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
+    const isPaginated = req.query.page !== undefined || req.query.limit !== undefined;
 
     const filter = { isApproved: true, isActive: true };
 
@@ -169,10 +172,25 @@ const getProducts = async (req, res) => {
     if (sort === 'name_asc') sortOption = { name: 1 };
     if (sort === 'rating') sortOption = { ratingsAverage: -1 };
 
-    const products = await Product.find(filter)
+    const query = Product.find(filter)
       .populate('seller', 'name email')
       .sort(sortOption);
 
+    if (isPaginated) {
+      const [products, total] = await Promise.all([
+        query.skip((page - 1) * limit).limit(limit),
+        Product.countDocuments(filter),
+      ]);
+      return res.status(200).json({
+        products,
+        page,
+        limit,
+        total,
+        hasMore: page * limit < total,
+      });
+    }
+
+    const products = await query;
     res.status(200).json(products);
   } catch (error) {
     console.error(error);

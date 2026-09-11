@@ -31,6 +31,7 @@ import {
 import { getAllTickets, updateTicket, addTicketMessage } from '../services/ticketService';
 import { bulkApproveProducts } from '../services/adminService';
 import { bulkReviewApplications } from '../services/sellerApplicationService';
+import { getAllReviewsAdmin, createReview, deleteReview } from '../services/reviewService';
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -52,6 +53,7 @@ function AdminDashboard() {
     { id: 'applications', label: 'Seller Applications' },
     { id: 'users', label: 'Users' },
     { id: 'products', label: 'Products' },
+    { id: 'reviews', label: 'Reviews' },
     { id: 'orders', label: 'Orders' },
     { id: 'abandoned', label: 'Abandoned Interest' },
     { id: 'activity', label: 'Activity Log' },
@@ -74,6 +76,7 @@ function AdminDashboard() {
   const [abandoned, setAbandoned] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tickets, setTickets] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -94,6 +97,7 @@ function AdminDashboard() {
         abandonedData,
         categoriesData,
         ticketsData,
+        reviewsData,
       ] = await Promise.all([
         getDashboardStats(),
         getAllProductsAdmin(),
@@ -105,6 +109,7 @@ function AdminDashboard() {
         getAbandonedActivity(),
         getAllCategories(),
         getAllTickets(),
+        getAllReviewsAdmin(),
       ]);
 
       setStats(statsData || {});
@@ -117,6 +122,7 @@ function AdminDashboard() {
       setAbandoned(Array.isArray(abandonedData) ? abandonedData : []);
       setCategories(Array.isArray(categoriesData) ? categoriesData : []);
       setTickets(Array.isArray(ticketsData) ? ticketsData : []);
+      setReviews(Array.isArray(reviewsData) ? reviewsData : []);
 
       // Only super admins can access these. A 403 here must not break the
       // rest of the dashboard for moderators.
@@ -187,6 +193,9 @@ function AdminDashboard() {
         {activeSection === 'products' && (
           <ProductsSection products={products} setProducts={setProducts} refreshStats={fetchAll} />
         )}
+        {activeSection === 'reviews' && (
+          <ReviewsSection products={products} reviews={reviews} setReviews={setReviews} />
+        )}
         {activeSection === 'orders' && <OrdersSection orders={orders} setOrders={setOrders} />}
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
         {activeSection === 'banners' && <BannersSection banners={banners} setBanners={setBanners} />}
@@ -202,6 +211,126 @@ function AdminDashboard() {
 }
 
 
+
+/* ===== Reviews ===== */
+function ReviewsSection({ products, reviews, setReviews }) {
+  const [form, setForm] = useState({
+    product: '',
+    customerName: '',
+    customerRole: 'Customer',
+    customerAvatar: '',
+    comment: '',
+    rating: 5,
+  });
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [message, setMessage] = useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setMessage('');
+    try {
+      const review = await createReview(form);
+      setReviews((current) => [review, ...current]);
+      setForm({ product: '', customerName: '', customerRole: 'Customer', customerAvatar: '', comment: '', rating: 5 });
+      setMessage('Review added successfully.');
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to add review.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (reviewId) => {
+    setDeletingId(reviewId);
+    try {
+      await deleteReview(reviewId);
+      setReviews((current) => current.filter((review) => review._id !== reviewId));
+    } catch (err) {
+      setMessage(err.response?.data?.message || 'Failed to delete review.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <div>
+          <h2 className="admin-content__title">Customer Reviews</h2>
+          <p className="admin-content__subtitle">Add customer feedback that appears on the relevant product page.</p>
+        </div>
+      </div>
+
+      <form className="review-admin-form" onSubmit={handleSubmit}>
+        <label>
+          Product
+          <select value={form.product} onChange={(event) => setForm({ ...form, product: event.target.value })} required>
+            <option value="">Select a product</option>
+            {products.map((product) => <option key={product._id} value={product._id}>{product.name}</option>)}
+          </select>
+        </label>
+        <label>
+          Customer name
+          <input value={form.customerName} onChange={(event) => setForm({ ...form, customerName: event.target.value })} required />
+        </label>
+        <label>
+          Customer role
+          <input value={form.customerRole} onChange={(event) => setForm({ ...form, customerRole: event.target.value })} />
+        </label>
+        <label>
+          Rating
+          <select value={form.rating} onChange={(event) => setForm({ ...form, rating: Number(event.target.value) })}>
+            {[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} stars</option>)}
+          </select>
+        </label>
+        <label className="review-admin-form__wide">
+          Avatar URL (optional)
+          <input value={form.customerAvatar} onChange={(event) => setForm({ ...form, customerAvatar: event.target.value })} />
+        </label>
+        <label className="review-admin-form__wide">
+          Review
+          <textarea value={form.comment} onChange={(event) => setForm({ ...form, comment: event.target.value })} rows="4" required />
+        </label>
+        <button type="submit" className="dashboard__action-btn dashboard__action-btn--success" disabled={saving}>
+          {saving ? 'Adding...' : 'Add Review'}
+        </button>
+        {message && <p className="review-admin-form__message">{message}</p>}
+      </form>
+
+      {reviews.length === 0 ? (
+        <div className="dashboard__empty"><p>No reviews have been added.</p></div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead><tr><th>Product</th><th>Customer</th><th>Rating</th><th>Review</th><th>Action</th></tr></thead>
+            <tbody>
+              {reviews.map((review) => (
+                <tr key={review._id}>
+                  <td>{review.product?.name || 'Unknown product'}</td>
+                  <td>{review.customerName}<br /><small>{review.customerRole}</small></td>
+                  <td className="review-admin-stars">{'★'.repeat(review.rating)}</td>
+                  <td>{review.comment}</td>
+                  <td>
+                    <button
+                      type="button"
+                      className="dashboard__action-btn dashboard__action-btn--danger"
+                      disabled={deletingId === review._id}
+                      onClick={() => handleDelete(review._id)}
+                    >
+                      {deletingId === review._id ? 'Deleting...' : 'Delete'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ===== Analytics ===== */
 const CHART_COLORS = ['#5B3DF5', '#FF8A3D', '#1FAE6E', '#0284C7', '#E5484D'];

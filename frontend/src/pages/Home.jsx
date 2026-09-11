@@ -15,6 +15,9 @@ function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const pageSize = 20;
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const categoryFromUrl = searchParams.get('category') || '';
@@ -27,6 +30,11 @@ function Home() {
   }, [categoryFromUrl]);
 
   useEffect(() => {
+    setPage(1);
+  }, [searchQuery, categoryFromUrl, filters.category, filters.minPrice, filters.maxPrice, sort]);
+
+  useEffect(() => {
+    let active = true;
     const fetchProducts = async () => {
       setLoading(true);
       setError('');
@@ -40,17 +48,25 @@ function Home() {
         if (filters.minPrice) params.minPrice = filters.minPrice;
         if (filters.maxPrice) params.maxPrice = filters.maxPrice;
         if (sort) params.sort = sort;
+        params.page = page;
+        params.limit = pageSize;
 
         const data = await getAllProducts(params);
-        setProducts(data);
+        if (!active) return;
+        const nextProducts = Array.isArray(data) ? data : data.products;
+        setProducts((prev) => (page === 1 ? nextProducts : [...prev, ...nextProducts]));
+        setHasMore(Array.isArray(data) ? false : data.hasMore);
       } catch (err) {
-        setError('Failed to load products');
+        if (active) setError('Failed to load products');
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchProducts();
+    return () => {
+      active = false;
+    };
   }, [
     searchQuery,
     categoryFromUrl,
@@ -58,7 +74,10 @@ function Home() {
     filters.minPrice,
     filters.maxPrice,
     sort,
+    page,
   ]);
+
+  const handleLoadMore = () => setPage((currentPage) => currentPage + 1);
 
   const handleClearFilters = () => {
     setFilters({ category: '', minPrice: '', maxPrice: '' });
@@ -113,6 +132,11 @@ function Home() {
                   </StaggerItem>
                 ))}
               </StaggerGrid>
+            )}
+            {!loading && !error && hasMore && (
+              <button type="button" className="products-load-more" onClick={handleLoadMore}>
+                Load More
+              </button>
             )}
           </div>
         </div>

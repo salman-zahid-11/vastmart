@@ -171,8 +171,26 @@
 
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: var(--space-lg);
+}
+
+.products-load-more {
+  display: block;
+  margin: var(--space-xl) auto 0;
+  padding: 11px 30px;
+  border: 2px solid var(--color-accent);
+  border-radius: var(--radius-pill);
+  color: var(--color-accent);
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.products-load-more:hover {
+  color: white;
+  background: var(--color-accent);
 }
 
 .products-grid__item {
@@ -183,6 +201,12 @@
   .products-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-md);
+  }
+
+  @media (min-width: 901px) and (max-width: 1150px) {
+    .products-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 }
 

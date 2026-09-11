@@ -19,6 +19,7 @@ const { generalLimiter } = require('./middleware/rateLimiters');
 const sanitizeMiddleware = require('./middleware/sanitize');
 const helmet = require('helmet');
 const ticketRoutes = require('./routes/ticketRoutes');
+const reviewRoutes = require('./routes/reviewRoutes');
 
 connectDB();
 
@@ -59,6 +60,7 @@ app.use('/api/coupons', couponRoutes);
 app.use('/api/activity', visitorActivityRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tickets', ticketRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 const PORT = process.env.PORT || 5000;
 

@@ -7,6 +7,7 @@ import ImageGallery from '../components/ImageGallery';
 import { trackActivity } from '../services/activityService';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
+import { getProductReviews } from '../services/reviewService';
 import './ProductDetail.css';
 
 function ProductDetail() {
@@ -22,6 +23,7 @@ function ProductDetail() {
   const [message, setMessage] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -29,8 +31,19 @@ function ProductDetail() {
         const data = await getProductById(id);
         setProduct(data);
         trackActivity(id, 'viewed');
-        const related = await getAllProducts({ category: data.category });
-        setRelatedProducts(related.filter((item) => item._id !== data._id).slice(0, 5));
+        const [relatedResult, reviewsResult] = await Promise.allSettled([
+          getAllProducts({ category: data.category }),
+          getProductReviews(id),
+        ]);
+        if (relatedResult.status === 'fulfilled') {
+          const relatedProductsData = Array.isArray(relatedResult.value)
+            ? relatedResult.value
+            : relatedResult.value.products;
+          setRelatedProducts(relatedProductsData.filter((item) => item._id !== data._id).slice(0, 5));
+        }
+        if (reviewsResult.status === 'fulfilled') {
+          setReviews(Array.isArray(reviewsResult.value) ? reviewsResult.value : []);
+        }
       } catch (err) {
         setError('Product not found');
       } finally {
@@ -194,7 +207,13 @@ Please confirm and arrange delivery. Thank you!`);
 
       <section className="product-detail__tabs" aria-label="Product information">
         <button type="button" className="product-detail__tab product-detail__tab--active">Description</button>
-        <button type="button" className="product-detail__tab" disabled>Customer Reviews (0)</button>
+        <button
+          type="button"
+          className="product-detail__tab"
+          onClick={() => document.getElementById('customer-reviews-heading')?.scrollIntoView({ behavior: 'smooth' })}
+        >
+          Customer Reviews ({reviews.length})
+        </button>
       </section>
 
       <section className="product-detail__description-panel">
@@ -207,6 +226,44 @@ Please confirm and arrange delivery. Thank you!`);
           <span>Availability</span><strong>{product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</strong>
           <span>Sold by</span><strong>{product.seller?.name || 'Unknown Seller'}</strong>
         </div>
+      </section>
+
+      <section className="product-detail__reviews" aria-labelledby="customer-reviews-heading">
+        <div className="product-detail__section-heading">
+          <h2 id="customer-reviews-heading">Customer Reviews</h2>
+          {reviews.length > 0 && (
+            <span className="product-detail__review-summary">
+              <strong>{product.ratingsAverage?.toFixed(1) || '0.0'}</strong> / 5
+            </span>
+          )}
+        </div>
+        {reviews.length === 0 ? (
+          <p className="product-detail__empty-reviews">No customer reviews yet.</p>
+        ) : (
+          <div className="product-detail__review-grid">
+            {reviews.map((review) => (
+              <article className="product-detail__review-card" key={review._id}>
+                <p className="product-detail__review-comment">{review.comment}</p>
+                <div className="product-detail__review-stars" aria-label={`${review.rating} out of 5 stars`}>
+                  {'★'.repeat(review.rating)}<span>{'★'.repeat(5 - review.rating)}</span>
+                </div>
+                <div className="product-detail__review-author">
+                  {review.customerAvatar ? (
+                    <img src={review.customerAvatar} alt="" />
+                  ) : (
+                    <span className="product-detail__review-avatar">
+                      {review.customerName.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <div>
+                    <strong>{review.customerName}</strong>
+                    <small>{review.customerRole || 'Customer'}</small>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       {relatedProducts.length > 0 && (
