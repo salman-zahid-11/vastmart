@@ -33,6 +33,7 @@ const orderSchema = new mongoose.Schema(
       label: String,
       street: { type: String, required: true },
       city: { type: String, required: true },
+      thana: { type: String, required: true },
       postalCode: String,
       country: { type: String, required: true },
       phone: { type: String, required: true },

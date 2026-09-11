@@ -19,6 +19,7 @@ const createOrder = async (req, res) => {
       !shippingAddress.email ||
       !shippingAddress.street ||
       !shippingAddress.city ||
+      !shippingAddress.thana ||
       !shippingAddress.phone
     ) {
       return res.status(400).json({ message: 'Please fill in all required delivery details' });

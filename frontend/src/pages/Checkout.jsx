@@ -6,6 +6,23 @@ import { validateCoupon } from '../services/couponService';
 import Reveal from '../components/Reveal';
 import './Checkout.css';
 
+const districtThanas = {
+  Dhaka: ['Dhanmondi', 'Gulshan', 'Mirpur', 'Uttara', 'Kafrul', 'Motijheel', 'Tejgaon'],
+  Chattogram: ['Kotwali', 'Pahartali', 'Panchlaish', 'Halishahar', 'Bayezid'],
+  Gazipur: ['Gazipur Sadar', 'Tongi', 'Kaliakair', 'Kapasia'],
+  Narayanganj: ['Narayanganj Sadar', 'Fatullah', 'Rupganj', 'Siddhirganj'],
+  Cumilla: ['Cumilla Sadar', 'Chandina', 'Daudkandi', 'Burichong'],
+  Sylhet: ['Sylhet Sadar', 'South Surma', 'Beanibazar', 'Golapganj'],
+  Rajshahi: ['Rajshahi Sadar', 'Boalia', 'Motihar', 'Shah Makhdum'],
+  Khulna: ['Khulna Sadar', 'Sonadanga', 'Khalishpur', 'Daulatpur'],
+  Barishal: ['Barishal Sadar', 'Bakerganj', 'Banaripara', 'Wazirpur'],
+  Rangpur: ['Rangpur Sadar', 'Gangachara', 'Mithapukur', 'Pirganj'],
+  Mymensingh: ['Mymensingh Sadar', 'Trishal', 'Muktagachha', 'Bhaluka'],
+  Bogura: ['Bogura Sadar', 'Shibganj', 'Sherpur', 'Dupchanchia'],
+};
+
+const districts = Object.keys(districtThanas);
+
 function Checkout() {
   const navigate = useNavigate();
   const { cart, refreshCart } = useCart();
@@ -16,6 +33,7 @@ function Checkout() {
     label: 'Home',
     street: '',
     city: '',
+    thana: '',
     postalCode: '',
     country: 'Bangladesh',
     phone: '',
@@ -33,6 +51,10 @@ function Checkout() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleDistrictChange = (e) => {
+    setFormData({ ...formData, city: e.target.value, thana: '' });
   };
 
   const itemsTotal = cart.items.reduce((sum, item) => {
@@ -102,97 +124,93 @@ function Checkout() {
 
   return (
     <div className="checkout-page">
-      <h1 className="checkout-page__title">Checkout</h1>
+      <div className="checkout-page__heading">
+        <h1 className="checkout-page__title">Checkout</h1>
+        <p>Home <span>›</span> Checkout</p>
+      </div>
 
       <div className="checkout-page__layout">
-        <form onSubmit={handleSubmit} className="checkout-form">
-
-          
-
-          <Reveal>
+        <form id="checkout-form" onSubmit={handleSubmit} className="checkout-form">
           <section className="checkout-section">
-            <h3>Contact Details</h3>
+            <h3>Shipping Address</h3>
 
             {error && <p className="checkout-form__error">{error}</p>}
 
             <div className="checkout-form__row">
               <div className="checkout-form__field">
-                <label>Full Name</label>
-                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required placeholder="Recipient's full name" />
+                <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} required placeholder="Your full name *" aria-label="Full name" />
               </div>
               <div className="checkout-form__field">
-                <label>Email Address</label>
-                <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="you@example.com" />
+                <input type="text" name="phone" value={formData.phone} onChange={handleChange} required placeholder="01XXXXXXXXX *" aria-label="Phone number" />
               </div>
+            </div>
+            <div className="checkout-form__field">
+              <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="example@gmail.com (Optional)" aria-label="Email address" />
+            </div>
+            <div className="checkout-form__field">
+              <label className="checkout-form__address-label">Your Address</label>
+              <input type="text" name="street" value={formData.street} onChange={handleChange} required placeholder="House no. / building / street / area *" />
+            </div>
+            <div className="checkout-form__row">
+              <div className="checkout-form__field">
+                <select name="city" value={formData.city} onChange={handleDistrictChange} required aria-label="District">
+                  <option value="">Select district *</option>
+                  {districts.map((district) => <option key={district} value={district}>{district}</option>)}
+                </select>
+              </div>
+              <div className="checkout-form__field">
+                <select name="thana" value={formData.thana} onChange={handleChange} required disabled={!formData.city} aria-label="Thana">
+                  <option value="">{formData.city ? 'Select thana *' : 'Select district first'}</option>
+                  {(districtThanas[formData.city] || []).map((thana) => <option key={thana} value={thana}>{thana}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="checkout-form__row">
+              <div className="checkout-form__field">
+                <input type="text" name="country" value={formData.country} onChange={handleChange} required placeholder="Country" />
+              </div>
+              <div className="checkout-form__field">
+                <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} placeholder="Postal code (optional)" />
+              </div>
+            </div>
+            <div className="checkout-form__field">
+              <textarea name="deliveryNotes" value={formData.deliveryNotes} onChange={handleChange} placeholder="Special notes (optional)" rows="3" />
             </div>
           </section>
-          </Reveal>
 
-          <Reveal>
-          <section className="checkout-section">
-            <h3>Shipping Address</h3>
-
-            <div className="checkout-form__row">
-              <div className="checkout-form__field">
-                <label>Address Label</label>
-                <input type="text" name="label" value={formData.label} onChange={handleChange} placeholder="Home, Office..." />
-              </div>
-              <div className="checkout-form__field">
-                <label>Phone Number</label>
-                <input type="text" name="phone" value={formData.phone} onChange={handleChange} required placeholder="01XXXXXXXXX" />
-              </div>
-            </div>
-
-            <div className="checkout-form__field">
-              <label>Street Address</label>
-              <input type="text" name="street" value={formData.street} onChange={handleChange} required placeholder="House, road, area" />
-            </div>
-
-            <div className="checkout-form__row">
-              <div className="checkout-form__field">
-                <label>City</label>
-                <input type="text" name="city" value={formData.city} onChange={handleChange} required />
-              </div>
-              <div className="checkout-form__field">
-                <label>Postal Code</label>
-                <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} />
-              </div>
-            </div>
-
-            <div className="checkout-form__row">
-              <div className="checkout-form__field">
-                <label>Country</label>
-                <input type="text" name="country" value={formData.country} onChange={handleChange} required />
-              </div>
-              <div className="checkout-form__field">
-                <label>Alternate Phone (optional)</label>
-                <input type="text" name="alternatePhone" value={formData.alternatePhone} onChange={handleChange} placeholder="Backup contact number" />
-              </div>
-            </div>
-
-            <div className="checkout-form__field">
-              <label>Delivery Notes (optional)</label>
-              <input type="text" name="deliveryNotes" value={formData.deliveryNotes} onChange={handleChange} placeholder="Gate code, landmark, delivery instructions..." />
-            </div>
+          <section className="checkout-section checkout-section--billing">
+            <h3>Billing Address</h3>
+            <p className="checkout-form__billing-note">Same as shipping address</p>
+            <div className="checkout-form__billing-preview">{formData.fullName || 'Your full name'} · {formData.city || 'District'} · {formData.thana || 'Thana'}</div>
           </section>
-          </Reveal>
-
-          <button type="submit" disabled={loading} className="checkout-form__submit">
-            {loading ? 'Placing order...' : `Place Order — ৳${total}`}
-          </button>
         </form>
 
-                <aside className="checkout-summary">
-          <h3>Order Summary</h3>
+        <aside className="checkout-sidebar">
+          <section className="checkout-section checkout-section--order">
+            <h3>Order Review</h3>
           {cart.items.map((item) => (
-            <div key={item.product._id} className="checkout-summary__row">
-              <span>{item.product.name} × {item.quantity}</span>
-              <span>৳{(item.product.discountPrice || item.product.price) * item.quantity}</span>
+            <div key={item.product._id} className="checkout-item">
+              <img src={item.product.images?.[0] || 'https://via.placeholder.com/56'} alt="" />
+              <span>{item.product.name}<small>Qty: {item.quantity}</small></span>
+              <strong>৳{(item.product.discountPrice || item.product.price) * item.quantity}</strong>
             </div>
           ))}
-          <hr />
+          </section>
 
-          <div className="checkout-coupon">
+          <section className="checkout-section checkout-section--payment">
+            <h3>Payment Method</h3>
+            <div className="payment-options">
+              {paymentOptions.map((option) => (
+                <label key={option.value} className={`payment-option ${paymentMethod === option.value ? 'payment-option--active' : ''}`}>
+                  <input type="radio" name="paymentMethod" value={option.value} checked={paymentMethod === option.value} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          <section className="checkout-section checkout-section--coupon">
+            <h3>Have any coupon or gift voucher?</h3>
             {appliedCoupon ? (
               <div className="checkout-coupon__applied">
                 <span>🎟️ {appliedCoupon.code} applied</span>
@@ -213,9 +231,8 @@ function Checkout() {
               </div>
             )}
             {couponError && <p className="checkout-coupon__error">{couponError}</p>}
-          </div>
-
-          <hr />
+          </section>
+          <section className="checkout-summary">
           <div className="checkout-summary__row">
             <span>Subtotal</span>
             <span>৳{itemsTotal}</span>
@@ -235,6 +252,10 @@ function Checkout() {
             <span>Total</span>
             <span>৳{total}</span>
           </div>
+          <button type="submit" form="checkout-form" disabled={loading} className="checkout-form__submit">
+            {loading ? 'Placing order...' : `Place Order — ৳${total}`}
+          </button>
+          </section>
         </aside>
       </div>
     </div>
