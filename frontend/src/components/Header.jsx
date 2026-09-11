@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { getAllProducts } from '../services/productService';
+import logo from '../assets/logo_vastmart.png';
 import './Header.css';
 
 function Header() {
@@ -71,9 +72,10 @@ function Header() {
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <Link to="/" className="site-header__logo">
-          Vast<span>Mart</span>
-        </Link>
+<Link to="/" className="site-header__logo">
+  <img src={logo} alt="VastMart" className="site-header__logo-img" />
+  Vast<span>Mart</span>
+</Link>
 
         <div className="site-header__search-wrap" ref={searchRef}>
           <form onSubmit={handleSearch} className="site-header__search">

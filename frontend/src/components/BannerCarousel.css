@@ -1,9 +1,9 @@
 .banner-carousel {
   position: relative;
-  width: 100%;
   max-width: 1280px;
   margin: var(--space-lg) auto 0;
-  box-sizing: border-box;
+  padding: 0 var(--space-xl);
+  overflow: hidden;
 }
 
 /* Visible window — ONLY ONE SLIDE IS SHOWN */
@@ -27,20 +27,22 @@
 /* Each slide = EXACTLY the viewport width */
 .banner-carousel__slide {
   min-width: 100%;
-  min-height: 340px;
+  height: 340px;
   padding: 56px 64px;
   color: white;
   position: relative;
   display: flex;
   align-items: center;
   overflow: hidden;
+  border-radius: var(--radius-lg);
 }
 
 .banner-carousel__slide-bg {
   position: absolute;
-  inset: -15% 0;
+  inset: -10% -5%;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   will-change: transform;
 }
 
