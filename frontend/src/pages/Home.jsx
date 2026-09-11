@@ -4,11 +4,8 @@ import { getAllProducts } from '../services/productService';
 import ProductCard from '../components/ProductCard';
 import FilterSidebar from '../components/FilterSidebar';
 import BannerCarousel from '../components/BannerCarousel';
-import CategoryGrid from '../components/CategoryGrid';
-import Reveal from '../components/Reveal';
 import StaggerGrid, { StaggerItem } from '../components/StaggerGrid';
 import { SkeletonGrid } from '../components/Skeleton';
-import ScrollingProductRow from '../components/ScrollingProductRow';
 import './Home.css';
 
 function Home() {
@@ -87,12 +84,6 @@ function Home() {
   return (
     <div>
       <BannerCarousel />
-      <Reveal>
-        <CategoryGrid />
-              {!loading && products.length > 0 && (
-        <ScrollingProductRow title="Trending Now" products={products.slice(0, 12)} />
-      )}
-      </Reveal>
 
       <section id="products" className="products-section">
         <div className="products-section__header">

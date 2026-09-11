@@ -1,13 +1,39 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import TiltCard from './TiltCard';
 import './ProductCard.css';
 
 function ProductCard({ product }) {
   const hasDiscount = Boolean(product.discountPrice);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addItem } = useCart();
+  const [adding, setAdding] = useState(false);
+
+  const handleAddToCart = async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    setAdding(true);
+    try {
+      await addItem(product._id);
+    } catch (error) {
+      console.error('Failed to add product to cart', error);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <TiltCard className="product-card-tilt-wrap" maxTilt={6}>
-      <Link to={`/products/${product._id}`} className="product-card">
+      <div className="product-card">
+        <Link to={`/products/${product._id}`} className="product-card__link">
         <div className="product-card__image-wrap">
         <img
           src={product.images?.[0] || 'https://via.placeholder.com/400'}
@@ -27,7 +53,16 @@ function ProductCard({ product }) {
           {hasDiscount && <span className="product-card__price-strike">৳{product.price}</span>}
         </div>
         </div>
-      </Link>
+        </Link>
+        <button
+          type="button"
+          className="product-card__cart-button"
+          onClick={handleAddToCart}
+          disabled={adding || product.stock === 0}
+        >
+          {adding ? 'Adding...' : '🛒 Add To Cart'}
+        </button>
+      </div>
     </TiltCard>
   );
 }
