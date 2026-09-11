@@ -202,16 +202,17 @@
 @media (max-width: 700px) {
 
   .banner-carousel {
+    margin-top: var(--space-md);
     padding: 0 15px;
   }
 
   .banner-carousel__track {
-    height: 320px;
+    height: 220px;
   }
 
   .banner-carousel__slide {
-    height: 320px;
-    padding: 35px 25px;
+    height: 220px;
+    padding: 24px 20px;
   }
 
   .banner-carousel__title {
@@ -226,6 +227,17 @@
     padding: 11px 22px;
   }
 
+}
+
+@media (max-width: 480px) {
+  .banner-carousel__track,
+  .banner-carousel__slide {
+    height: 180px;
+  }
+
+  .banner-carousel__dots {
+    margin-top: 10px;
+  }
 }
 
 .banner-carousel__slide--full-image {
