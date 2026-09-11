@@ -30,10 +30,12 @@ function OrderConfirmation() {
     fetchOrder();
   }, [id]);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     setDownloading(true);
     try {
-      generateReceiptPDF(order);
+      await generateReceiptPDF(order);
+    } catch (err) {
+      setError('Unable to generate the receipt. Please try again.');
     } finally {
       setDownloading(false);
     }
