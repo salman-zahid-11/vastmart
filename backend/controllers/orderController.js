@@ -11,7 +11,7 @@ const VisitorActivity = require('../models/VisitorActivity');
 // @route  POST /api/orders
 const createOrder = async (req, res) => {
   try {
-    const { shippingAddress, paymentMethod, couponCode} = req.body;
+    const { shippingAddress, billingAddress, paymentMethod, couponCode} = req.body;
 
     if (
       !shippingAddress ||
@@ -84,6 +84,7 @@ const createOrder = async (req, res) => {
       user: req.user._id,
       items: orderItems,
       shippingAddress,
+      billingAddress,
       paymentMethod: paymentMethod || 'cod',
       itemsTotal,
       shippingFee,

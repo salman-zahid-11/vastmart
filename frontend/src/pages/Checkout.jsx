@@ -3,25 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/orderService';
 import { validateCoupon } from '../services/couponService';
-import Reveal from '../components/Reveal';
 import './Checkout.css';
+import { districts, locationData } from '../data/bangladeshLocations';
 
-const districtThanas = {
-  Dhaka: ['Dhanmondi', 'Gulshan', 'Mirpur', 'Uttara', 'Kafrul', 'Motijheel', 'Tejgaon'],
-  Chattogram: ['Kotwali', 'Pahartali', 'Panchlaish', 'Halishahar', 'Bayezid'],
-  Gazipur: ['Gazipur Sadar', 'Tongi', 'Kaliakair', 'Kapasia'],
-  Narayanganj: ['Narayanganj Sadar', 'Fatullah', 'Rupganj', 'Siddhirganj'],
-  Cumilla: ['Cumilla Sadar', 'Chandina', 'Daudkandi', 'Burichong'],
-  Sylhet: ['Sylhet Sadar', 'South Surma', 'Beanibazar', 'Golapganj'],
-  Rajshahi: ['Rajshahi Sadar', 'Boalia', 'Motihar', 'Shah Makhdum'],
-  Khulna: ['Khulna Sadar', 'Sonadanga', 'Khalishpur', 'Daulatpur'],
-  Barishal: ['Barishal Sadar', 'Bakerganj', 'Banaripara', 'Wazirpur'],
-  Rangpur: ['Rangpur Sadar', 'Gangachara', 'Mithapukur', 'Pirganj'],
-  Mymensingh: ['Mymensingh Sadar', 'Trishal', 'Muktagachha', 'Bhaluka'],
-  Bogura: ['Bogura Sadar', 'Shibganj', 'Sherpur', 'Dupchanchia'],
-};
+function LocationPicker({ prefix, address, onChange }) {
+  const [districtSearch, setDistrictSearch] = useState('');
+  const [thanaSearch, setThanaSearch] = useState('');
+  const visibleDistricts = districts.filter((district) => district.toLowerCase().includes(districtSearch.toLowerCase()));
+  const thanas = locationData[address.city] || [];
+  const visibleThanas = thanas.filter((thana) => thana.toLowerCase().includes(thanaSearch.toLowerCase()));
 
-const districts = Object.keys(districtThanas);
+  return (
+    <div className="checkout-location-picker">
+      <div className="checkout-form__field">
+        <input value={districtSearch} onChange={(e) => setDistrictSearch(e.target.value)} placeholder="Search district..." aria-label={`${prefix} search district`} />
+        <select name={`${prefix}District`} value={address.city} onChange={(e) => onChange({ city: e.target.value, thana: '' })} required aria-label={`${prefix} district`}>
+          <option value="">Select district *</option>
+          {visibleDistricts.map((district) => <option key={district} value={district}>{district}</option>)}
+        </select>
+      </div>
+      <div className="checkout-form__field">
+        <input value={thanaSearch} onChange={(e) => setThanaSearch(e.target.value)} placeholder="Search thana / upazila..." disabled={!address.city} aria-label={`${prefix} search thana`} />
+        <select name={`${prefix}Thana`} value={address.thana} onChange={(e) => onChange({ thana: e.target.value })} required disabled={!address.city} aria-label={`${prefix} thana`}>
+          <option value="">{address.city ? 'Select thana / upazila *' : 'Select district first'}</option>
+          {visibleThanas.map((thana) => <option key={thana} value={thana}>{thana}</option>)}
+        </select>
+      </div>
+    </div>
+  );
+}
 
 function Checkout() {
   const navigate = useNavigate();
@@ -40,6 +50,8 @@ function Checkout() {
     alternatePhone: '',
     deliveryNotes: '',
   });
+  const [billingAddress, setBillingAddress] = useState({ city: '', thana: '', street: '', postalCode: '', country: 'Bangladesh' });
+  const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
 
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [error, setError] = useState('');
@@ -53,9 +65,7 @@ function Checkout() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleDistrictChange = (e) => {
-    setFormData({ ...formData, city: e.target.value, thana: '' });
-  };
+  const updateBilling = (changes) => setBillingAddress((current) => ({ ...current, ...changes }));
 
   const itemsTotal = cart.items.reduce((sum, item) => {
     const price = item.product.discountPrice || item.product.price;
@@ -94,6 +104,7 @@ function Checkout() {
     try {
       const order = await createOrder({
         shippingAddress: formData,
+        billingAddress: billingSameAsShipping ? formData : billingAddress,
         paymentMethod,
         couponCode: appliedCoupon?.code,
       });
@@ -151,20 +162,7 @@ function Checkout() {
               <label className="checkout-form__address-label">Your Address</label>
               <input type="text" name="street" value={formData.street} onChange={handleChange} required placeholder="House no. / building / street / area *" />
             </div>
-            <div className="checkout-form__row">
-              <div className="checkout-form__field">
-                <select name="city" value={formData.city} onChange={handleDistrictChange} required aria-label="District">
-                  <option value="">Select district *</option>
-                  {districts.map((district) => <option key={district} value={district}>{district}</option>)}
-                </select>
-              </div>
-              <div className="checkout-form__field">
-                <select name="thana" value={formData.thana} onChange={handleChange} required disabled={!formData.city} aria-label="Thana">
-                  <option value="">{formData.city ? 'Select thana *' : 'Select district first'}</option>
-                  {(districtThanas[formData.city] || []).map((thana) => <option key={thana} value={thana}>{thana}</option>)}
-                </select>
-              </div>
-            </div>
+            <LocationPicker prefix="shipping" address={formData} onChange={(changes) => setFormData((current) => ({ ...current, ...changes }))} />
             <div className="checkout-form__row">
               <div className="checkout-form__field">
                 <input type="text" name="country" value={formData.country} onChange={handleChange} required placeholder="Country" />
@@ -180,8 +178,20 @@ function Checkout() {
 
           <section className="checkout-section checkout-section--billing">
             <h3>Billing Address</h3>
-            <p className="checkout-form__billing-note">Same as shipping address</p>
-            <div className="checkout-form__billing-preview">{formData.fullName || 'Your full name'} · {formData.city || 'District'} · {formData.thana || 'Thana'}</div>
+            <label className="checkout-form__same-address">
+              <input type="checkbox" checked={billingSameAsShipping} onChange={(e) => setBillingSameAsShipping(e.target.checked)} />
+              Same as shipping address
+            </label>
+            {!billingSameAsShipping && (
+              <>
+                <input className="checkout-billing-input" value={billingAddress.street} onChange={(e) => updateBilling({ street: e.target.value })} placeholder="Billing house / street address *" required />
+                <LocationPicker prefix="billing" address={billingAddress} onChange={updateBilling} />
+                <div className="checkout-form__row">
+                  <input className="checkout-billing-input" value={billingAddress.country} onChange={(e) => updateBilling({ country: e.target.value })} placeholder="Country" required />
+                  <input className="checkout-billing-input" value={billingAddress.postalCode} onChange={(e) => updateBilling({ postalCode: e.target.value })} placeholder="Postal code (optional)" />
+                </div>
+              </>
+            )}
           </section>
         </form>
 

@@ -40,6 +40,13 @@ const orderSchema = new mongoose.Schema(
       alternatePhone: String,
       deliveryNotes: String,
     },
+    billingAddress: {
+      city: String,
+      thana: String,
+      street: String,
+      postalCode: String,
+      country: String,
+    },
     paymentMethod: {
       type: String,
       enum: ['cod', 'card', 'mobile_banking', 'wallet'],

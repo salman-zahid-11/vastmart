@@ -126,6 +126,61 @@
   outline: none;
 }
 
+.checkout-form__field select:focus,
+.checkout-form__field textarea:focus,
+.checkout-billing-input:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
+.checkout-location-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.checkout-location-picker .checkout-form__field {
+  display: grid;
+  gap: 6px;
+}
+
+.checkout-location-picker .checkout-form__field input {
+  font-size: 12px;
+  padding: 8px 10px;
+  background: #f8fafc;
+}
+
+.checkout-location-picker .checkout-form__field select {
+  grid-row: 2;
+}
+
+.checkout-form__same-address {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.checkout-form__same-address input {
+  accent-color: var(--color-primary);
+}
+
+.checkout-billing-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  border: 1px solid #d5d9df;
+  border-radius: 6px;
+  background: white;
+  font-size: 13px;
+}
+
+.checkout-section--billing .checkout-location-picker {
+  margin-bottom: 0;
+}
+
 .payment-options {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -276,6 +331,11 @@
   }
   .checkout-form__row {
     grid-template-columns: 1fr;
+  }
+
+  .checkout-location-picker {
+    grid-template-columns: 1fr;
+    gap: 0;
   }
 
   .checkout-summary {
