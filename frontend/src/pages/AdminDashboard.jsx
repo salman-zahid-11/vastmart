@@ -1453,7 +1453,9 @@ function ProductsSection({ products, setProducts, refreshStats }) {
   const visibleProducts = products
     .filter((p) => {
       if (filter === 'pending') return !p.isApproved;
-      if (filter === 'trending') return p.isTrending;
+      // Trending Now is the management view: admins need the full approved
+      // catalogue here so they can add or remove any product.
+      if (filter === 'trending') return p.isApproved;
       return true;
     })
     .filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()));
@@ -1487,7 +1489,7 @@ function ProductsSection({ products, setProducts, refreshStats }) {
           placeholder="Search products to manage Trending Now..."
           aria-label="Search products to manage Trending Now"
         />
-        {filter === 'trending' && <span>Select Featured to remove a product from Trending Now.</span>}
+        {filter === 'trending' && <span>Select Add or Remove to edit the Trending Now products.</span>}
       </div>
 
       {visibleProducts.length === 0 ? (
@@ -1539,6 +1541,7 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                       >
                         {product.isTrending ? 'Remove' : 'Add'}
                       </button>
+                      {product.isTrending && <span className="admin-products__featured-label">Currently shown</span>}
                     </td>
                     <td>
                       {product.isApproved ? (
