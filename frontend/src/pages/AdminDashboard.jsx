@@ -1388,6 +1388,7 @@ function ApplicationsSection({ applications, setApplications, refreshAll }) {
 function ProductsSection({ products, setProducts, refreshStats }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [filter, setFilter] = useState('pending');
+  const [productSearch, setProductSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -1448,7 +1449,14 @@ function ProductsSection({ products, setProducts, refreshStats }) {
   };
 
   const pendingCount = products.filter((p) => !p.isApproved).length;
-  const visibleProducts = filter === 'pending' ? products.filter((p) => !p.isApproved) : products;
+  const trendingCount = products.filter((p) => p.isTrending).length;
+  const visibleProducts = products
+    .filter((p) => {
+      if (filter === 'pending') return !p.isApproved;
+      if (filter === 'trending') return p.isTrending;
+      return true;
+    })
+    .filter((p) => p.name.toLowerCase().includes(productSearch.toLowerCase()));
 
   return (
     <div>
@@ -1461,12 +1469,25 @@ function ProductsSection({ products, setProducts, refreshStats }) {
           <button className={`admin-tab ${filter === 'all' ? 'admin-tab--active' : ''}`} onClick={() => setFilter('all')}>
             All ({products.length})
           </button>
+          <button className={`admin-tab ${filter === 'trending' ? 'admin-tab--active' : ''}`} onClick={() => setFilter('trending')}>
+            Trending Now ({trendingCount})
+          </button>
                   {filter === 'pending' && visibleProducts.length > 0 && (
           <button onClick={toggleSelectAll} style={{ fontSize: '12.5px', color: 'var(--color-primary)', fontWeight: 600, marginLeft: 'var(--space-sm)' }}>
             {selectedIds.length === visibleProducts.length ? 'Deselect all' : 'Select all'}
           </button>
         )}
         </div>
+      </div>
+      <div className="admin-products__toolbar">
+        <input
+          type="search"
+          value={productSearch}
+          onChange={(event) => setProductSearch(event.target.value)}
+          placeholder="Search products to manage Trending Now..."
+          aria-label="Search products to manage Trending Now"
+        />
+        {filter === 'trending' && <span>Select Featured to remove a product from Trending Now.</span>}
       </div>
 
       {visibleProducts.length === 0 ? (
@@ -1516,7 +1537,7 @@ function ProductsSection({ products, setProducts, refreshStats }) {
                         onClick={() => handleTrending(product._id, !product.isTrending)}
                         className={`dashboard__action-btn ${product.isTrending ? 'dashboard__action-btn--success' : ''}`}
                       >
-                        {product.isTrending ? 'Featured' : 'Add'}
+                        {product.isTrending ? 'Remove' : 'Add'}
                       </button>
                     </td>
                     <td>

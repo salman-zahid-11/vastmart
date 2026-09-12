@@ -201,13 +201,17 @@ const getProducts = async (req, res) => {
 
 const setTrendingProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isTrending: Boolean(req.body.isTrending) },
-      { new: true }
-    ).populate('seller', 'name email');
+    const isTrending = req.body.isTrending === true;
+    const product = await Product.findById(req.params.id);
 
     if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (isTrending && !product.isApproved) {
+      return res.status(400).json({ message: 'Only approved products can be added to Trending Now' });
+    }
+
+    product.isTrending = isTrending;
+    await product.save();
+    await product.populate('seller', 'name email');
     res.status(200).json(product);
   } catch (error) {
     console.error(error);
