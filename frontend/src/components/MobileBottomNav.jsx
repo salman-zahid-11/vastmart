@@ -1,6 +1,8 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { getMyNotifications, markNotificationRead } from '../services/notificationService';
 import './MobileBottomNav.css';
 
 function MobileBottomNav({ onOpenMenu, onOpenSearch }) {
@@ -8,6 +10,39 @@ function MobileBottomNav({ onOpenMenu, onOpenSearch }) {
   const navigate = useNavigate();
   const { itemCount } = useCart();
   const { user } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setNotifications([]);
+      return undefined;
+    }
+    getMyNotifications()
+      .then((items) => {
+        if (active) setNotifications(Array.isArray(items) ? items : []);
+      })
+      .catch(() => {
+        if (active) setNotifications([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+  const handleNotificationRead = async (notification) => {
+    if (notification.isRead) return;
+    try {
+      await markNotificationRead(notification._id);
+      setNotifications((current) => current.map((item) => (
+        item._id === notification._id ? { ...item, isRead: true } : item
+      )));
+    } catch (err) {
+      console.error('Failed to mark notification as read', err);
+    }
+  };
 
   const isActive = (path) => location.pathname === path;
 
@@ -50,6 +85,43 @@ function MobileBottomNav({ onOpenMenu, onOpenSearch }) {
         </svg>
         <span>Search</span>
       </button>
+
+      {user && (
+        <div className="mobile-bottom-nav__notification-wrap">
+          <button
+            className="mobile-bottom-nav__item"
+            onClick={() => setNotificationsOpen((open) => !open)}
+            aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+          >
+            <span className="mobile-bottom-nav__notification-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              {unreadCount > 0 && <span className="mobile-bottom-nav__badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+            </span>
+            <span>Alerts</span>
+          </button>
+          {notificationsOpen && (
+            <div className="mobile-bottom-nav__notifications">
+              <strong>Notifications</strong>
+              {notifications.length === 0 ? (
+                <p>No notifications yet.</p>
+              ) : notifications.slice(0, 6).map((notification) => (
+                <button
+                  type="button"
+                  key={notification._id}
+                  className={!notification.isRead ? 'mobile-bottom-nav__notification--unread' : ''}
+                  onClick={() => handleNotificationRead(notification)}
+                >
+                  <b>{notification.title}</b>
+                  <span>{notification.message}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <Link to={user ? '/profile' : '/login'} className="mobile-bottom-nav__item">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
