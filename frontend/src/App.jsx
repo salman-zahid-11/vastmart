@@ -42,11 +42,12 @@ function App() {
       {/* Animated background - stays fixed behind the entire application */}
       <ScrollProgress />
       <AnimatedBackground />
-      <TopBar />
       <div className="desktop-sticky-navigation">
+        <TopBar />
         <Header />
         <CategoryNav />
       </div>
+      <div className="desktop-sticky-navigation-spacer" aria-hidden="true" />
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
