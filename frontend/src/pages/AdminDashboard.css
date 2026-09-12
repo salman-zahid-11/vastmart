@@ -669,6 +669,41 @@
   margin-bottom: var(--space-lg);
 }
 
+.notification-form {
+  max-width: 680px;
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.notification-form label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-ink-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notification-form input,
+.notification-form select,
+.notification-form textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font: inherit;
+}
+
+.notification-form__feedback {
+  color: var(--color-primary);
+  font-size: 13px;
+}
+
 .notice-form input {
   flex: 1;
   padding: 10px 14px;

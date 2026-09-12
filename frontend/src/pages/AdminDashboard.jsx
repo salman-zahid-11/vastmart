@@ -16,6 +16,7 @@ import {
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
 import { updateOrderStatus } from '../services/adminService';
 import { getAllNotices, createNotice, toggleNotice, deleteNotice } from '../services/noticeService';
+import { createNotification } from '../services/notificationService';
 import { getAllBanners, createBanner, toggleBanner, deleteBanner } from '../services/bannerService';
 import { getAllCoupons, createCoupon, toggleCoupon, deleteCoupon } from '../services/couponService';
 import { useAuth } from '../context/AuthContext';
@@ -51,6 +52,7 @@ function AdminDashboard() {
     { id: 'coupons', label: 'Coupons', superOnly: true },
     { id: 'banners', label: 'Banners', superOnly: true },
     { id: 'notices', label: 'Notices' },
+    { id: 'notifications', label: 'Notifications', superOnly: true },
     { id: 'applications', label: 'Seller Applications' },
     { id: 'users', label: 'Users' },
     { id: 'products', label: 'Products' },
@@ -187,6 +189,7 @@ function AdminDashboard() {
       <main className="admin-content">
         {activeSection === 'overview' && <OverviewSection stats={stats} />}
         {activeSection === 'notices' && <NoticesSection notices={notices} setNotices={setNotices} />}
+        {activeSection === 'notifications' && <NotificationsSection users={users} />}
         {activeSection === 'applications' && (
           <ApplicationsSection applications={applications} setApplications={setApplications} refreshAll={fetchAll} />
         )}
@@ -828,6 +831,66 @@ function StatCard({ label, value, accent, warn }) {
   );
 }
 
+
+/* ===== Notifications ===== */
+function NotificationsSection({ users }) {
+  const [recipientId, setRecipientId] = useState('');
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState('');
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setFeedback('');
+    try {
+      await createNotification({ recipientId, title, message });
+      setTitle('');
+      setMessage('');
+      setRecipientId('');
+      setFeedback('Notification sent successfully.');
+    } catch (err) {
+      setFeedback(err.response?.data?.message || 'Failed to send notification.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Send Notification</h2>
+      </div>
+      <p className="admin-section__description">Send a private notification to any customer, seller, or admin account.</p>
+      <form className="notification-form" onSubmit={handleSubmit}>
+        <label>
+          Recipient
+          <select value={recipientId} onChange={(event) => setRecipientId(event.target.value)} required>
+            <option value="">Select an account</option>
+            {users.map((account) => (
+              <option key={account._id} value={account._id}>
+                {account.name} ({account.email}) · {account.role}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Title
+          <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} required placeholder="Notification title" />
+        </label>
+        <label>
+          Message
+          <textarea value={message} onChange={(event) => setMessage(event.target.value)} maxLength={1000} required rows="5" placeholder="Write your message..." />
+        </label>
+        <button type="submit" className="dashboard__action-btn dashboard__action-btn--success" disabled={submitting}>
+          {submitting ? 'Sending...' : 'Send Notification'}
+        </button>
+        {feedback && <p className="notification-form__feedback">{feedback}</p>}
+      </form>
+    </div>
+  );
+}
 
 /* ===== Notices ===== */
 function NoticesSection({ notices, setNotices }) {

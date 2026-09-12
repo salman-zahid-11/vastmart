@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { getAllProducts } from '../services/productService';
+import { getMyNotifications, markNotificationRead } from '../services/notificationService';
 import logo from '../assets/logo_vastmart.png';
 import './Header.css';
 
@@ -16,6 +17,8 @@ function Header() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const menuRef = useRef(null);
   const searchRef = useRef(null);
   const debounceTimer = useRef(null);
@@ -28,10 +31,47 @@ function Header() {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
         setShowSuggestions(false);
       }
+      if (!e.target.closest('.site-header__notifications')) {
+        setNotificationsOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setNotifications([]);
+      return undefined;
+    }
+    getMyNotifications()
+      .then((items) => {
+        if (active) setNotifications(Array.isArray(items) ? items : []);
+      })
+      .catch(() => {
+        if (active) setNotifications([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+
+  const handleNotificationClick = async (notification) => {
+    setNotificationsOpen(false);
+    if (!notification.isRead) {
+      try {
+        await markNotificationRead(notification._id);
+        setNotifications((current) => current.map((item) => (
+          item._id === notification._id ? { ...item, isRead: true } : item
+        )));
+      } catch (err) {
+        console.error('Failed to mark notification as read', err);
+      }
+    }
+  };
 
   // Debounced live search-as-you-type
   useEffect(() => {
@@ -148,6 +188,44 @@ function Header() {
               </svg>
               <span>Track Order</span>
             </Link>
+          )}
+
+          {user && (
+            <div className="site-header__notifications">
+              <button
+                type="button"
+                className="site-header__action site-header__notification-button"
+                onClick={() => setNotificationsOpen((open) => !open)}
+                aria-label={`Notifications${unreadCount ? `, ${unreadCount} unread` : ''}`}
+              >
+                <span className="site-header__notification-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                  {unreadCount > 0 && <span className="site-header__notification-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>}
+                </span>
+                <span>Notifications</span>
+              </button>
+              {notificationsOpen && (
+                <div className="site-header__notification-dropdown">
+                  <div className="site-header__notification-heading">Notifications</div>
+                  {notifications.length === 0 ? (
+                    <p className="site-header__notification-empty">No notifications yet.</p>
+                  ) : notifications.slice(0, 8).map((notification) => (
+                    <button
+                      type="button"
+                      key={notification._id}
+                      className={`site-header__notification-item ${notification.isRead ? '' : 'site-header__notification-item--unread'}`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <strong>{notification.title}</strong>
+                      <span>{notification.message}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           <Link to="/cart" className="site-header__action">
