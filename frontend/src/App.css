@@ -1,0 +1,20 @@
+.desktop-sticky-navigation {
+  position: relative;
+  z-index: 100;
+}
+
+@media (min-width: 851px) {
+  .desktop-sticky-navigation {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--color-canvas-raised);
+    box-shadow: 0 3px 14px rgba(24, 19, 48, 0.08);
+  }
+
+  .desktop-sticky-navigation .site-header,
+  .desktop-sticky-navigation .category-nav {
+    position: relative;
+    top: auto;
+  }
+}

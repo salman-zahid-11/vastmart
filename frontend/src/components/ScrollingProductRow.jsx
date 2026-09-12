@@ -2,7 +2,10 @@ import { Link } from 'react-router-dom';
 import './ScrollingProductRow.css';
 
 function ScrollingProductRow({ title, products = [] }) {
-  const loopedProducts = [...products, ...products];
+  // A short list should remain unique; duplicating two or three products makes
+  // the same cards appear twice before the marquee has room to loop.
+  const shouldLoop = products.length >= 6;
+  const loopedProducts = shouldLoop ? [...products, ...products] : products;
 
   if (products.length === 0) return null;
 
@@ -11,7 +14,7 @@ function ScrollingProductRow({ title, products = [] }) {
       <h2 className="scrolling-row__title">{title}</h2>
 
       <div className="scrolling-row__viewport">
-        <div className="scrolling-row__track">
+        <div className={`scrolling-row__track ${shouldLoop ? '' : 'scrolling-row__track--static'}`}>
           {loopedProducts.map((product, i) => (
             <div
               key={`${product._id}-${i}`}

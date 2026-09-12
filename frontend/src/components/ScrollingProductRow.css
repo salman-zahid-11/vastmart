@@ -24,6 +24,12 @@
   animation: trending-marquee 46s linear infinite;
 }
 
+.scrolling-row__track--static {
+  justify-content: center;
+  width: 100%;
+  animation: none;
+}
+
 .scrolling-row__viewport:hover .scrolling-row__track {
   animation-play-state: paused;
 }

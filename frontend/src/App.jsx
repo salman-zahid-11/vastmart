@@ -29,6 +29,7 @@ import { useState } from 'react';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileSearchOverlay from './components/MobileSearchOverlay';
+import './App.css';
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -42,8 +43,10 @@ function App() {
       <ScrollProgress />
       <AnimatedBackground />
       <TopBar />
-      <Header />
-      <CategoryNav />
+      <div className="desktop-sticky-navigation">
+        <Header />
+        <CategoryNav />
+      </div>
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
