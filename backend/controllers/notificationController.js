@@ -28,21 +28,31 @@ const markNotificationRead = async (req, res) => {
 
 const createNotification = async (req, res) => {
   try {
-    const { recipientId, title, message } = req.body;
-    if (!recipientId || !title?.trim() || !message?.trim()) {
-      return res.status(400).json({ message: 'Recipient, title, and message are required' });
+    const { recipientIds = [], audience = 'selected', title, message } = req.body;
+    if (!Array.isArray(recipientIds) || recipientIds.length === 0 || !title?.trim() || !message?.trim()) {
+      return res.status(400).json({ message: 'Select at least one recipient, title, and message are required' });
     }
 
-    const recipient = await User.findById(recipientId).select('_id');
-    if (!recipient) return res.status(404).json({ message: 'Recipient not found' });
+    const audienceFilter = {
+      all: {},
+      customers: { role: 'customer' },
+      sellers: { role: 'seller' },
+      moderators: { role: 'admin', adminLevel: 'moderator' },
+      admins: { role: 'admin' },
+      selected: { _id: { $in: recipientIds } },
+    }[audience];
+    if (!audienceFilter) return res.status(400).json({ message: 'Invalid notification audience' });
 
-    const notification = await Notification.create({
+    const recipients = await User.find(audienceFilter).select('_id');
+    if (recipients.length === 0) return res.status(404).json({ message: 'No matching recipients found' });
+
+    const notifications = await Notification.insertMany(recipients.map((recipient) => ({
       recipient: recipient._id,
       title: title.trim(),
       message: message.trim(),
       createdBy: req.user._id,
-    });
-    res.status(201).json(notification);
+    })));
+    res.status(201).json({ count: notifications.length });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

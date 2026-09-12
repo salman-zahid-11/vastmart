@@ -699,6 +699,16 @@
   font: inherit;
 }
 
+.notification-form__account-list {
+  min-height: 130px;
+}
+
+.notification-form small {
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  font-weight: 400;
+}
+
 .notification-form__feedback {
   color: var(--color-primary);
   font-size: 13px;

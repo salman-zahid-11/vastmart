@@ -834,7 +834,8 @@ function StatCard({ label, value, accent, warn }) {
 
 /* ===== Notifications ===== */
 function NotificationsSection({ users }) {
-  const [recipientId, setRecipientId] = useState('');
+  const [audience, setAudience] = useState('selected');
+  const [recipientIds, setRecipientIds] = useState([]);
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -845,10 +846,10 @@ function NotificationsSection({ users }) {
     setSubmitting(true);
     setFeedback('');
     try {
-      await createNotification({ recipientId, title, message });
+      await createNotification({ audience, recipientIds, title, message });
       setTitle('');
       setMessage('');
-      setRecipientId('');
+      setRecipientIds([]);
       setFeedback('Notification sent successfully.');
     } catch (err) {
       setFeedback(err.response?.data?.message || 'Failed to send notification.');
@@ -865,16 +866,35 @@ function NotificationsSection({ users }) {
       <p className="admin-section__description">Send a private notification to any customer, seller, or admin account.</p>
       <form className="notification-form" onSubmit={handleSubmit}>
         <label>
-          Recipient
-          <select value={recipientId} onChange={(event) => setRecipientId(event.target.value)} required>
-            <option value="">Select an account</option>
-            {users.map((account) => (
-              <option key={account._id} value={account._id}>
-                {account.name} ({account.email}) · {account.role}
-              </option>
-            ))}
+          Recipients
+          <select value={audience} onChange={(event) => { setAudience(event.target.value); setRecipientIds([]); }} required>
+            <option value="selected">Selected accounts</option>
+            <option value="all">All users</option>
+            <option value="customers">All customers</option>
+            <option value="sellers">All sellers</option>
+            <option value="moderators">All moderators</option>
+            <option value="admins">All admins</option>
           </select>
         </label>
+        {audience === 'selected' && (
+          <label>
+            Select accounts ({recipientIds.length} selected)
+            <select
+              multiple
+              value={recipientIds}
+              onChange={(event) => setRecipientIds(Array.from(event.target.selectedOptions, (option) => option.value))}
+              required
+              className="notification-form__account-list"
+            >
+              {users.map((account) => (
+                <option key={account._id} value={account._id}>
+                  {account.name} ({account.email}) · {account.role}
+                </option>
+              ))}
+            </select>
+            <small>Hold Ctrl (Windows) or Command (Mac) to select multiple accounts.</small>
+          </label>
+        )}
         <label>
           Title
           <input value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} required placeholder="Notification title" />
