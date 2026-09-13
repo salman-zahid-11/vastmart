@@ -132,7 +132,7 @@ const updateProduct = async (req, res) => {
 // @route  GET /api/products
 const getProducts = async (req, res) => {
   try {
-    const { search, category, minPrice, maxPrice, sort, brand, trending } = req.query;
+    const { search, category, subCategory, minPrice, maxPrice, sort, brand, trending } = req.query;
     const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
     const limit = Math.min(50, Math.max(1, Number.parseInt(req.query.limit, 10) || 20));
     const isPaginated = req.query.page !== undefined || req.query.limit !== undefined;
@@ -152,6 +152,9 @@ const getProducts = async (req, res) => {
     // Category filter (exact match, case-insensitive)
     if (category) {
       filter.category = { $regex: `^${category}$`, $options: 'i' };
+    }
+    if (subCategory) {
+      filter.subCategory = { $regex: `^${subCategory}$`, $options: 'i' };
     }
 
     // Brand filter

@@ -39,6 +39,99 @@
   transition: color var(--duration-fast) var(--ease-out);
 }
 
+.category-nav__item {
+  position: relative;
+  flex-shrink: 0;
+  padding: 12px 0;
+}
+
+.category-nav__chevron {
+  margin-left: 5px;
+  font-size: 14px;
+}
+
+.category-nav__menu {
+  position: absolute;
+  top: calc(100% - 1px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: minmax(170px, 0.7fr) minmax(260px, 1.3fr);
+  gap: 22px;
+  width: min(620px, 80vw);
+  padding: 18px 20px;
+  background: var(--color-canvas-raised);
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  animation: categoryMenuIn 140ms var(--ease-out) both;
+}
+
+@keyframes categoryMenuIn {
+  from { opacity: 0; transform: translate(-50%, -5px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.category-nav__subcategories,
+.category-nav__products {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.category-nav__products {
+  border-left: 1px solid var(--color-border);
+  padding-left: 20px;
+}
+
+.category-nav__menu-title {
+  margin-bottom: 4px;
+  color: var(--color-ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.category-nav__subcategories a {
+  color: var(--color-ink-muted);
+  font-size: 13px;
+}
+
+.category-nav__subcategories a:hover {
+  color: var(--color-primary);
+}
+
+.category-nav__product {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--color-ink-muted);
+  font-size: 12px;
+}
+
+.category-nav__product img {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+}
+
+.category-nav__product span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-nav__status {
+  color: var(--color-ink-faint);
+  font-size: 12px;
+}
+
 .category-nav__link:hover {
   color: var(--color-primary);
 }
@@ -59,5 +152,13 @@
   .category-nav__inner {
     gap: var(--space-md);
     padding: 8px var(--space-md);
+  }
+
+  .category-nav__item {
+    padding: 8px 0;
+  }
+
+  .category-nav__menu {
+    display: none;
   }
 }

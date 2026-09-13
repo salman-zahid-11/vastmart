@@ -29,6 +29,7 @@ function Home() {
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const categoryFromUrl = searchParams.get('category') || '';
+  const subCategoryFromUrl = searchParams.get('subCategory') || '';
 
   const [filters, setFilters] = useState({ category: categoryFromUrl, minPrice: '', maxPrice: '' });
   const [sort, setSort] = useState('');
@@ -81,7 +82,7 @@ function Home() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, categoryFromUrl, filters.category, filters.minPrice, filters.maxPrice, sort, pageSize]);
+  }, [searchQuery, categoryFromUrl, subCategoryFromUrl, filters.category, filters.minPrice, filters.maxPrice, sort, pageSize]);
 
   useEffect(() => {
     let active = true;
@@ -95,6 +96,7 @@ function Home() {
         // category menu, rather than waiting for local filter state to sync.
         const category = categoryFromUrl || filters.category;
         if (category) params.category = category;
+        if (subCategoryFromUrl) params.subCategory = subCategoryFromUrl;
         if (filters.minPrice) params.minPrice = filters.minPrice;
         if (filters.maxPrice) params.maxPrice = filters.maxPrice;
         if (sort) params.sort = sort;
@@ -120,6 +122,7 @@ function Home() {
   }, [
     searchQuery,
     categoryFromUrl,
+    subCategoryFromUrl,
     filters.category,
     filters.minPrice,
     filters.maxPrice,
