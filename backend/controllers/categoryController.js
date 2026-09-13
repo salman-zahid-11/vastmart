@@ -6,6 +6,12 @@ const normalizeImagePosition = (value, fallback = 50) => {
   return Math.min(100, Math.max(0, parsed));
 };
 
+const normalizeImageZoom = (value, fallback = 100) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(300, Math.max(100, parsed));
+};
+
 // @desc   Get all active categories (public — used for dropdowns/filters)
 // @route  GET /api/categories
 const getActiveCategories = async (req, res) => {
@@ -50,6 +56,7 @@ const createCategory = async (req, res) => {
       imageFit: req.body.imageFit === 'contain' ? 'contain' : 'cover',
       imagePositionX: normalizeImagePosition(req.body.imagePositionX),
       imagePositionY: normalizeImagePosition(req.body.imagePositionY),
+      imageZoom: normalizeImageZoom(req.body.imageZoom),
       displayOrder: Number(displayOrder) || 0,
       createdBy: req.user._id,
     });
@@ -76,6 +83,9 @@ const updateCategory = async (req, res) => {
     }
     if (req.body.imagePositionY !== undefined) {
       category.imagePositionY = normalizeImagePosition(req.body.imagePositionY);
+    }
+    if (req.body.imageZoom !== undefined) {
+      category.imageZoom = normalizeImageZoom(req.body.imageZoom);
     }
     await category.save();
     res.status(200).json(category);

@@ -39,6 +39,12 @@ const categorySchema = new mongoose.Schema(
       max: 100,
       default: 50,
     },
+    imageZoom: {
+      type: Number,
+      min: 100,
+      max: 300,
+      default: 100,
+    },
     displayOrder: {
       type: Number,
       default: 0,

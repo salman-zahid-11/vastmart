@@ -58,6 +58,7 @@ function CategoryGrid() {
                     style={{
                       objectFit: category.imageFit || 'cover',
                       objectPosition: `${category.imagePositionX ?? 50}% ${category.imagePositionY ?? 50}%`,
+                      transform: `translate(${(50 - (category.imagePositionX ?? 50)) * 0.8}%, ${(50 - (category.imagePositionY ?? 50)) * 0.8}%) scale(${(category.imageZoom || 100) / 100})`,
                     }}
                   />
                 ) : (

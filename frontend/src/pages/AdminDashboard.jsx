@@ -44,6 +44,72 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedCounter from '../components/AnimatedCounter';
 import './AdminDashboard.css';
 
+const removeImageBackground = (file) => new Promise((resolve, reject) => {
+  const sourceUrl = URL.createObjectURL(file);
+  const image = new Image();
+  image.onload = () => {
+    URL.revokeObjectURL(sourceUrl);
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext('2d', { willReadFrequently: true });
+    if (!context) {
+      reject(new Error('Unable to prepare image editor'));
+      return;
+    }
+    context.drawImage(image, 0, 0);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const { data, width, height } = imageData;
+    const background = [data[0], data[1], data[2]];
+    const visited = new Uint8Array(width * height);
+    const queue = [];
+    const enqueue = (x, y) => {
+      const index = y * width + x;
+      if (visited[index]) return;
+      visited[index] = 1;
+      queue.push([x, y]);
+    };
+    for (let x = 0; x < width; x += 1) {
+      enqueue(x, 0);
+      enqueue(x, height - 1);
+    }
+    for (let y = 1; y < height - 1; y += 1) {
+      enqueue(0, y);
+      enqueue(width - 1, y);
+    }
+    const matchesBackground = (x, y) => {
+      const pixel = (y * width + x) * 4;
+      const difference = Math.abs(data[pixel] - background[0])
+        + Math.abs(data[pixel + 1] - background[1])
+        + Math.abs(data[pixel + 2] - background[2]);
+      return difference < 75 && data[pixel + 3] > 0;
+    };
+    while (queue.length) {
+      const [x, y] = queue.shift();
+      if (!matchesBackground(x, y)) continue;
+      const pixel = (y * width + x) * 4;
+      data[pixel + 3] = 0;
+      if (x > 0) enqueue(x - 1, y);
+      if (x < width - 1) enqueue(x + 1, y);
+      if (y > 0) enqueue(x, y - 1);
+      if (y < height - 1) enqueue(x, y + 1);
+    }
+    context.putImageData(imageData, 0, 0);
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Unable to create transparent image'));
+        return;
+      }
+      resolve(new File([blob], `${file.name.replace(/\.[^.]+$/, '')}-no-background.png`, { type: 'image/png' }));
+    }, 'image/png');
+  };
+  image.onerror = () => {
+    URL.revokeObjectURL(sourceUrl);
+    reject(new Error('Unable to read selected image'));
+  };
+  image.src = sourceUrl;
+});
+
 
 function AdminDashboard() {
   const { user } = useAuth();
@@ -609,8 +675,10 @@ function CategoriesSection({ categories, setCategories }) {
     imageFit: 'cover',
     imagePositionX: 50,
     imagePositionY: 50,
+    imageZoom: 100,
   });
   const [imagePreview, setImagePreview] = useState('');
+  const [processingImage, setProcessingImage] = useState(false);
 
   useEffect(() => () => {
     if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
@@ -648,6 +716,7 @@ function CategoriesSection({ categories, setCategories }) {
       imageFit: category.imageFit || 'cover',
       imagePositionX: category.imagePositionX ?? 50,
       imagePositionY: category.imagePositionY ?? 50,
+      imageZoom: category.imageZoom ?? 100,
     });
   };
 
@@ -660,6 +729,7 @@ function CategoriesSection({ categories, setCategories }) {
       data.append('imageFit', editForm.imageFit);
       data.append('imagePositionX', editForm.imagePositionX);
       data.append('imagePositionY', editForm.imagePositionY);
+      data.append('imageZoom', editForm.imageZoom);
       if (editForm.image) data.append('image', editForm.image);
       const updated = await updateCategory(categoryId, data);
       setCategories((prev) => prev.map((c) => (c._id === categoryId ? updated : c)));
@@ -669,6 +739,30 @@ function CategoriesSection({ categories, setCategories }) {
       setError(err.response?.data?.message || 'Failed to update category');
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const handleImageFile = (file) => {
+    if (!file) return;
+    if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
+    setEditForm((current) => ({ ...current, image: file }));
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveBackground = async () => {
+    if (!editForm.image) {
+      setError('Choose a replacement image before removing its background.');
+      return;
+    }
+    setProcessingImage(true);
+    setError('');
+    try {
+      const processed = await removeImageBackground(editForm.image);
+      handleImageFile(processed);
+    } catch (err) {
+      setError(err.message || 'Failed to remove image background');
+    } finally {
+      setProcessingImage(false);
     }
   };
 
@@ -761,11 +855,7 @@ function CategoriesSection({ categories, setCategories }) {
                           type="file"
                           accept="image/jpeg,image/png,image/webp"
                           onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (!file) return;
-                            if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
-                            setEditForm({ ...editForm, image: file });
-                            setImagePreview(URL.createObjectURL(file));
+                            handleImageFile(e.target.files?.[0]);
                           }}
                         />
                       </label>
@@ -778,6 +868,7 @@ function CategoriesSection({ categories, setCategories }) {
                               style={{
                                 objectFit: editForm.imageFit,
                                 objectPosition: `${editForm.imagePositionX}% ${editForm.imagePositionY}%`,
+                                transform: `translate(${(50 - editForm.imagePositionX) * 0.8}%, ${(50 - editForm.imagePositionY) * 0.8}%) scale(${editForm.imageZoom / 100})`,
                               }}
                             />
                           </div>
@@ -809,6 +900,24 @@ function CategoriesSection({ categories, setCategories }) {
                                 onChange={(e) => setEditForm({ ...editForm, imagePositionY: Number(e.target.value) })}
                               />
                             </label>
+                            <label>
+                              Zoom: {editForm.imageZoom}%
+                              <input
+                                type="range"
+                                min="100"
+                                max="300"
+                                value={editForm.imageZoom}
+                                onChange={(e) => setEditForm({ ...editForm, imageZoom: Number(e.target.value) })}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              className="dashboard__action-btn"
+                              onClick={handleRemoveBackground}
+                              disabled={processingImage || !editForm.image}
+                            >
+                              {processingImage ? 'Removing...' : 'Remove background'}
+                            </button>
                           </div>
                         </div>
                       )}
