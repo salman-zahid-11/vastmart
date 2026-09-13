@@ -110,7 +110,7 @@
 
 .products-section__header {
   position: sticky;
-  top: 110px;
+  top: var(--desktop-navigation-height, 0px);
   z-index: 80;
   background: var(--color-canvas);
   display: flex;

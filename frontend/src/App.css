@@ -8,6 +8,10 @@
 }
 
 @media (min-width: 701px) {
+  :root {
+    --desktop-navigation-height: 144px;
+  }
+
   .desktop-sticky-navigation {
     position: fixed;
     top: 0;
@@ -20,6 +24,6 @@
 
   .desktop-sticky-navigation-spacer {
     display: block;
-    height: 136px;
+    height: var(--desktop-navigation-height);
   }
 }

@@ -7,7 +7,7 @@
   padding: var(--space-lg);
   align-self: start;
   position: fixed;
-  top: 112px;
+  top: var(--desktop-navigation-height, 0px);
   left: 24px;
   z-index: 120;
   box-shadow: var(--shadow-lg);
@@ -135,12 +135,18 @@
   .filter-sidebar {
     width: 100%;
     max-width: 340px;
-    top: 98px;
+    top: var(--desktop-navigation-height, 98px);
     left: 50%;
     transform: translate(-50%, calc(-100vh - 40px));
   }
 
   .filter-sidebar--open {
     transform: translate(-50%, 0);
+  }
+}
+
+@media (max-width: 700px) {
+  .filter-sidebar {
+    top: 98px;
   }
 }
