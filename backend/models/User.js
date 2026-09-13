@@ -68,6 +68,10 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    resetPasswordCodeAttempts: {
+      type: Number,
+      default: 0,
+    },
         failedLoginAttempts: {
       type: Number,
       default: 0,

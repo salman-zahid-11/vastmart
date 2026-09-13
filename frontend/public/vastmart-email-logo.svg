@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="190" height="52" viewBox="0 0 190 52" role="img" aria-labelledby="title">
+  <title id="title">VastMart</title>
+  <rect width="44" height="44" x="2" y="4" rx="12" fill="#ffffff"/>
+  <path d="M12 17h24l-3 20H15z" fill="#5b3df5"/>
+  <path d="M17 17a7 7 0 0 1 14 0" fill="none" stroke="#20173f" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="19" cy="40" r="2.5" fill="#20173f"/>
+  <circle cx="33" cy="40" r="2.5" fill="#20173f"/>
+  <text x="58" y="36" fill="#ffffff" font-family="Arial, sans-serif" font-size="25" font-weight="800">VastMart</text>
+</svg>

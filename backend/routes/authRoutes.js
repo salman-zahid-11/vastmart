@@ -23,7 +23,7 @@ router.put('/profile', protect, updateProfile);
 router.put('/profile/avatar', protect, upload.single('avatar'), updateAvatar);
 router.put('/profile/password', protect, changePassword);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);
-router.post('/verify-reset-code', authLimiter, verifyResetCode);
-router.post('/reset-password', authLimiter, resetPassword);
+router.post('/verify-reset-code', passwordResetLimiter, verifyResetCode);
+router.post('/reset-password', passwordResetLimiter, resetPassword);
 
 module.exports = router;

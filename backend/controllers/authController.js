@@ -5,6 +5,9 @@ const crypto = require('crypto');
 const { sendPasswordResetEmail } = require('../utils/emailService');
 const logActivity = require('../utils/logActivity');
 
+const RESET_CODE_MAX_ATTEMPTS = 5;
+const hashResetCode = (code) => crypto.createHash('sha256').update(String(code)).digest('hex');
+
 // @desc   Register a new user
 // @route  POST /api/auth/register
 const registerUser = async (req, res) => {
@@ -259,8 +262,9 @@ const forgotPassword = async (req, res) => {
     // Generate a 6-digit code
     const code = crypto.randomInt(100000, 999999).toString();
 
-    user.resetPasswordCode = code;
+    user.resetPasswordCode = hashResetCode(code);
     user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.resetPasswordCodeAttempts = 0;
     await user.save();
 
     await sendPasswordResetEmail(user.email, code);
@@ -278,13 +282,16 @@ const verifyResetCode = async (req, res) => {
   try {
     const { email, code } = req.body;
 
-    const user = await User.findOne({
-      email,
-      resetPasswordCode: code,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
+    const user = await User.findOne({ email });
+    if (!user || !user.resetPasswordCode || !user.resetPasswordExpires || user.resetPasswordExpires <= Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired code' });
+    }
+    if ((user.resetPasswordCodeAttempts || 0) >= RESET_CODE_MAX_ATTEMPTS) {
+      return res.status(429).json({ message: 'Too many invalid code attempts. Request a new code.' });
+    }
+    if (hashResetCode(code) !== user.resetPasswordCode) {
+      user.resetPasswordCodeAttempts = (user.resetPasswordCodeAttempts || 0) + 1;
+      await user.save();
       return res.status(400).json({ message: 'Invalid or expired code' });
     }
 
@@ -304,13 +311,16 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const user = await User.findOne({
-      email,
-      resetPasswordCode: code,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
+    const user = await User.findOne({ email });
+    if (!user || !user.resetPasswordCode || !user.resetPasswordExpires || user.resetPasswordExpires <= Date.now()) {
+      return res.status(400).json({ message: 'Invalid or expired code' });
+    }
+    if ((user.resetPasswordCodeAttempts || 0) >= RESET_CODE_MAX_ATTEMPTS) {
+      return res.status(429).json({ message: 'Too many invalid code attempts. Request a new code.' });
+    }
+    if (hashResetCode(code) !== user.resetPasswordCode) {
+      user.resetPasswordCodeAttempts = (user.resetPasswordCodeAttempts || 0) + 1;
+      await user.save();
       return res.status(400).json({ message: 'Invalid or expired code' });
     }
 
@@ -318,6 +328,7 @@ const resetPassword = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, salt);
     user.resetPasswordCode = null;
     user.resetPasswordExpires = null;
+    user.resetPasswordCodeAttempts = 0;
     await user.save();
 
     res.status(200).json({ message: 'Password reset successful' });
