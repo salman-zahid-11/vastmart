@@ -10,8 +10,13 @@ export const getAllCategories = async () => {
   return response.data;
 };
 
-export const createCategory = async (name, subCategories = []) => {
-  const response = await api.post('/categories', { name, subCategories });
+export const createCategory = async (data) => {
+  const response = await api.post('/categories', data, { headers: { 'Content-Type': 'multipart/form-data' } });
+  return response.data;
+};
+
+export const updateCategory = async (id, data) => {
+  const response = await api.put(`/categories/${id}`, data, { headers: { 'Content-Type': 'multipart/form-data' } });
   return response.data;
 };
 

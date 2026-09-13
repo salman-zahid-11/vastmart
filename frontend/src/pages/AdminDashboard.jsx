@@ -26,6 +26,7 @@ import { getAbandonedActivity } from '../services/activityService';
 import {
   getAllCategories,
   createCategory,
+  updateCategory,
   addSubCategory,
   removeSubCategory,
   toggleCategory,
@@ -594,10 +595,14 @@ function TicketsSection({ tickets, setTickets }) {
 /* ===== Categories ===== */
 function CategoriesSection({ categories, setCategories }) {
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryImage, setNewCategoryImage] = useState(null);
+  const [newCategoryOrder, setNewCategoryOrder] = useState(0);
   const [newSubCategoryInputs, setNewSubCategoryInputs] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', displayOrder: 0, image: null });
 
   const handleCreateCategory = async (e) => {
     e.preventDefault();
@@ -605,13 +610,41 @@ function CategoriesSection({ categories, setCategories }) {
     setSubmitting(true);
     setError('');
     try {
-      const created = await createCategory(newCategoryName.trim());
+      const data = new FormData();
+      data.append('name', newCategoryName.trim());
+      data.append('displayOrder', newCategoryOrder);
+      if (newCategoryImage) data.append('image', newCategoryImage);
+      const created = await createCategory(data);
       setCategories((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setNewCategoryName('');
+      setNewCategoryImage(null);
+      setNewCategoryOrder(0);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create category');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const startEdit = (category) => {
+    setEditingId(category._id);
+    setEditForm({ name: category.name, displayOrder: category.displayOrder || 0, image: null });
+  };
+
+  const handleEdit = async (categoryId) => {
+    setBusyId(categoryId);
+    try {
+      const data = new FormData();
+      data.append('name', editForm.name);
+      data.append('displayOrder', editForm.displayOrder);
+      if (editForm.image) data.append('image', editForm.image);
+      const updated = await updateCategory(categoryId, data);
+      setCategories((prev) => prev.map((c) => (c._id === categoryId ? updated : c)));
+      setEditingId(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update category');
+    } finally {
+      setBusyId(null);
     }
   };
 
@@ -675,6 +708,8 @@ function CategoriesSection({ categories, setCategories }) {
           onChange={(e) => setNewCategoryName(e.target.value)}
           placeholder="e.g. Toys & Games"
         />
+        <input type="number" min="0" value={newCategoryOrder} onChange={(e) => setNewCategoryOrder(e.target.value)} placeholder="Order" aria-label="Display order" />
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setNewCategoryImage(e.target.files[0])} />
         <button type="submit" disabled={submitting || !newCategoryName.trim()} className="dashboard__cta">
           {submitting ? 'Adding...' : 'Add Category'}
         </button>
@@ -692,8 +727,19 @@ function CategoriesSection({ categories, setCategories }) {
                   <span className={`pill pill--${category.isActive ? 'success' : 'pending'}`}>
                     {category.isActive ? 'Active' : 'Inactive'}
                   </span>
-                  <h4>{category.name}</h4>
+                  {editingId === category._id ? (
+                    <div className="category-card__edit">
+                      <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
+                      <input type="number" value={editForm.displayOrder} onChange={(e) => setEditForm({ ...editForm, displayOrder: e.target.value })} aria-label="Display order" />
+                      <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setEditForm({ ...editForm, image: e.target.files[0] })} />
+                    </div>
+                  ) : <h4>{category.name}</h4>}
                   <div className="category-card__header-actions">
+                    {editingId === category._id ? (
+                      <button disabled={isBusy} onClick={() => handleEdit(category._id)} className="dashboard__action-btn dashboard__action-btn--success">Save</button>
+                    ) : (
+                      <button disabled={isBusy} onClick={() => startEdit(category)} className="dashboard__action-btn">Edit</button>
+                    )}
                     <button disabled={isBusy} onClick={() => handleToggle(category._id)} className="dashboard__action-btn">
                       {category.isActive ? 'Deactivate' : 'Activate'}
                     </button>

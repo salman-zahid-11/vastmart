@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getAllProducts, getCategories } from '../services/productService';
+import { getAllProducts } from '../services/productService';
+import { getActiveCategories } from '../services/categoryService';
 import './CategoryGrid.css';
 
 function CategoryGrid() {
@@ -10,7 +11,7 @@ function CategoryGrid() {
   useEffect(() => {
     let active = true;
     Promise.all([
-      getCategories(),
+      getActiveCategories(),
       getAllProducts({ page: 1, limit: 50 }),
     ]).then(([categoryData, productData]) => {
       if (!active) return;
@@ -20,8 +21,15 @@ function CategoryGrid() {
         if (category && product.images?.[0] && !result[category]) result[category] = product.images[0];
         return result;
       }, {});
-      setCategories(categoryData.slice(0, 12));
-      setCategoryImages(images);
+      const managedCategories = Array.isArray(categoryData) ? categoryData : [];
+      setCategories(managedCategories.slice(0, 12));
+      setCategoryImages({
+        ...images,
+        ...managedCategories.reduce((result, category) => {
+          if (category.image) result[category.name.toLowerCase()] = category.image;
+          return result;
+        }, {}),
+      });
     }).catch(() => {
       if (active) setCategories([]);
     });
@@ -33,7 +41,8 @@ function CategoryGrid() {
       <h2 className="category-grid-section__title">Categories</h2>
 
       <div className="category-grid">
-        {categories.map((name) => {
+        {categories.map((category) => {
+          const name = category.name;
           return (
             <Link
               key={name}

@@ -4,7 +4,7 @@ const Category = require('../models/Category');
 // @route  GET /api/categories
 const getActiveCategories = async (req, res) => {
   try {
-    const categories = await Category.find({ isActive: true }).sort({ name: 1 });
+    const categories = await Category.find({ isActive: true }).sort({ displayOrder: 1, name: 1 });
     res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -15,7 +15,7 @@ const getActiveCategories = async (req, res) => {
 // @route  GET /api/categories/admin/all
 const getAllCategories = async (req, res) => {
   try {
-    const categories = await Category.find({}).sort({ name: 1 });
+    const categories = await Category.find({}).sort({ displayOrder: 1, name: 1 });
     res.status(200).json(categories);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -26,7 +26,7 @@ const getAllCategories = async (req, res) => {
 // @route  POST /api/categories
 const createCategory = async (req, res) => {
   try {
-    const { name, subCategories } = req.body;
+    const { name, subCategories, displayOrder } = req.body;
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: 'Category name is required' });
@@ -40,12 +40,28 @@ const createCategory = async (req, res) => {
     const category = await Category.create({
       name: name.trim(),
       subCategories: Array.isArray(subCategories) ? subCategories.filter(Boolean) : [],
+      image: req.file?.path || '',
+      displayOrder: Number(displayOrder) || 0,
       createdBy: req.user._id,
     });
 
     res.status(201).json(category);
   } catch (error) {
     console.error(error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+const updateCategory = async (req, res) => {
+  try {
+    const category = await Category.findById(req.params.id);
+    if (!category) return res.status(404).json({ message: 'Category not found' });
+    if (req.body.name !== undefined && req.body.name.trim()) category.name = req.body.name.trim();
+    if (req.body.displayOrder !== undefined) category.displayOrder = Number(req.body.displayOrder) || 0;
+    if (req.file) category.image = req.file.path;
+    await category.save();
+    res.status(200).json(category);
+  } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 };
@@ -137,6 +153,7 @@ module.exports = {
   getActiveCategories,
   getAllCategories,
   createCategory,
+  updateCategory,
   addSubCategory,
   removeSubCategory,
   toggleCategory,

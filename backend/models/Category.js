@@ -18,6 +18,14 @@ const categorySchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    image: {
+      type: String,
+      default: '',
+    },
+    displayOrder: {
+      type: Number,
+      default: 0,
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

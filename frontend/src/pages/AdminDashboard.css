@@ -938,6 +938,20 @@
   gap: 6px;
 }
 
+.category-card__edit {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.category-card__edit input {
+  max-width: 180px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+}
+
 .category-card__subs {
   display: flex;
   flex-wrap: wrap;
