@@ -1,44 +1,54 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getCategories } from '../services/productService';
+import { getAllProducts, getCategories } from '../services/productService';
 import './CategoryGrid.css';
-
-const CATEGORY_STYLES = [
-  { match: 'electronic', emoji: '💻', color: 'var(--color-primary-tint)' },
-  { match: 'fashion', emoji: '👗', color: 'var(--color-accent-tint)' },
-  { match: 'home', emoji: '🛋️', color: 'var(--color-success-tint)' },
-  { match: 'beauty', emoji: '💄', color: '#FCE7F3' },
-  { match: 'grocery', emoji: '🛒', color: '#FEF9C3' },
-  { match: 'sport', emoji: '🏸', color: '#DBEAFE' },
-];
 
 function CategoryGrid() {
   const [categories, setCategories] = useState([]);
+  const [categoryImages, setCategoryImages] = useState({});
 
   useEffect(() => {
-    getCategories().then(setCategories).catch(() => setCategories([]));
+    let active = true;
+    Promise.all([
+      getCategories(),
+      getAllProducts({ page: 1, limit: 50 }),
+    ]).then(([categoryData, productData]) => {
+      if (!active) return;
+      const products = Array.isArray(productData) ? productData : productData.products || [];
+      const images = products.reduce((result, product) => {
+        const category = product.category?.toLowerCase();
+        if (category && product.images?.[0] && !result[category]) result[category] = product.images[0];
+        return result;
+      }, {});
+      setCategories(categoryData.slice(0, 12));
+      setCategoryImages(images);
+    }).catch(() => {
+      if (active) setCategories([]);
+    });
+    return () => { active = false; };
   }, []);
 
   return (
     <section className="category-grid-section">
-      <h2 className="category-grid-section__title">Shop by Category</h2>
+      <h2 className="category-grid-section__title">Categories</h2>
 
       <div className="category-grid">
         {categories.map((name) => {
-          const style = CATEGORY_STYLES.find(({ match }) => name.toLowerCase().includes(match)) || {
-            emoji: '🛍️',
-            color: 'var(--color-canvas-raised)',
-          };
           return (
-         <Link
-  key={name}
-  to={`/?category=${encodeURIComponent(name)}`}
-  className="category-grid__item"
-  style={{ background: style.color }}
->
-            <span className="category-grid__emoji">{style.emoji}</span>
-            <span className="category-grid__label">{name}</span>
-          </Link>
+            <Link
+              key={name}
+              to={`/?category=${encodeURIComponent(name)}`}
+              className="category-grid__item"
+            >
+              <span className="category-grid__image-wrap">
+                {categoryImages[name.toLowerCase()] ? (
+                  <img src={categoryImages[name.toLowerCase()]} alt="" className="category-grid__image" />
+                ) : (
+                  <span className="category-grid__image-fallback">🛍️</span>
+                )}
+              </span>
+              <span className="category-grid__label">{name}</span>
+            </Link>
           );
         })}
       </div>

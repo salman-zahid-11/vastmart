@@ -7,6 +7,7 @@ import BannerCarousel from '../components/BannerCarousel';
 import StaggerGrid, { StaggerItem } from '../components/StaggerGrid';
 import { SkeletonGrid } from '../components/Skeleton';
 import ScrollingProductRow from '../components/ScrollingProductRow';
+import CategoryGrid from '../components/CategoryGrid';
 import './Home.css';
 
 function Home() {
@@ -140,6 +141,7 @@ function Home() {
       {trendingProducts.length > 0 && (
         <ScrollingProductRow title="Trending Now" products={trendingProducts} />
       )}
+      <CategoryGrid />
 
       <section id="products" className="products-section">
         <div className="products-section__header">
