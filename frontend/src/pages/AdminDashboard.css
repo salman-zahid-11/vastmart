@@ -91,7 +91,7 @@
   margin-bottom: 0;
 }
 
-@media (min-width: 851px) {
+@media (min-width: 701px) {
   .admin-layout {
     padding-top: 48px;
   }
