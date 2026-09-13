@@ -601,7 +601,6 @@ function CategoriesSection({ categories, setCategories }) {
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
-  const [preview, setPreview] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', displayOrder: 0, image: null });
 
@@ -1252,6 +1251,7 @@ function PromotionalPopupsSection({ popups, setPopups }) {
   const [editingId, setEditingId] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
+  const [preview, setPreview] = useState('');
 
   const reset = () => {
     setForm(emptyForm);
