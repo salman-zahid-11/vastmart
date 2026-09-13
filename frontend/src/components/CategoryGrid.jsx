@@ -51,7 +51,15 @@ function CategoryGrid() {
             >
               <span className="category-grid__image-wrap">
                 {categoryImages[name.toLowerCase()] ? (
-                  <img src={categoryImages[name.toLowerCase()]} alt="" className="category-grid__image" />
+                  <img
+                    src={categoryImages[name.toLowerCase()]}
+                    alt=""
+                    className="category-grid__image"
+                    style={{
+                      objectFit: category.imageFit || 'cover',
+                      objectPosition: `${category.imagePositionX ?? 50}% ${category.imagePositionY ?? 50}%`,
+                    }}
+                  />
                 ) : (
                   <span className="category-grid__image-fallback">🛍️</span>
                 )}

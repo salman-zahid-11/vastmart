@@ -602,7 +602,19 @@ function CategoriesSection({ categories, setCategories }) {
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', displayOrder: 0, image: null });
+  const [editForm, setEditForm] = useState({
+    name: '',
+    displayOrder: 0,
+    image: null,
+    imageFit: 'cover',
+    imagePositionX: 50,
+    imagePositionY: 50,
+  });
+  const [imagePreview, setImagePreview] = useState('');
+
+  useEffect(() => () => {
+    if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   const handleCreateCategory = async (e) => {
     e.preventDefault();
@@ -628,7 +640,15 @@ function CategoriesSection({ categories, setCategories }) {
 
   const startEdit = (category) => {
     setEditingId(category._id);
-    setEditForm({ name: category.name, displayOrder: category.displayOrder || 0, image: null });
+    setImagePreview(category.image || '');
+    setEditForm({
+      name: category.name,
+      displayOrder: category.displayOrder || 0,
+      image: null,
+      imageFit: category.imageFit || 'cover',
+      imagePositionX: category.imagePositionX ?? 50,
+      imagePositionY: category.imagePositionY ?? 50,
+    });
   };
 
   const handleEdit = async (categoryId) => {
@@ -637,10 +657,14 @@ function CategoriesSection({ categories, setCategories }) {
       const data = new FormData();
       data.append('name', editForm.name);
       data.append('displayOrder', editForm.displayOrder);
+      data.append('imageFit', editForm.imageFit);
+      data.append('imagePositionX', editForm.imagePositionX);
+      data.append('imagePositionY', editForm.imagePositionY);
       if (editForm.image) data.append('image', editForm.image);
       const updated = await updateCategory(categoryId, data);
       setCategories((prev) => prev.map((c) => (c._id === categoryId ? updated : c)));
       setEditingId(null);
+      setImagePreview('');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update category');
     } finally {
@@ -731,7 +755,63 @@ function CategoriesSection({ categories, setCategories }) {
                     <div className="category-card__edit">
                       <input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} />
                       <input type="number" value={editForm.displayOrder} onChange={(e) => setEditForm({ ...editForm, displayOrder: e.target.value })} aria-label="Display order" />
-                      <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setEditForm({ ...editForm, image: e.target.files[0] })} />
+                      <label className="category-card__image-upload">
+                        <span>Replace image</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
+                            setEditForm({ ...editForm, image: file });
+                            setImagePreview(URL.createObjectURL(file));
+                          }}
+                        />
+                      </label>
+                      {imagePreview && (
+                        <div className="category-card__image-editor">
+                          <div className="category-card__image-preview">
+                            <img
+                              src={imagePreview}
+                              alt={`${category.name} preview`}
+                              style={{
+                                objectFit: editForm.imageFit,
+                                objectPosition: `${editForm.imagePositionX}% ${editForm.imagePositionY}%`,
+                              }}
+                            />
+                          </div>
+                          <div className="category-card__image-controls">
+                            <label>
+                              Fit
+                              <select value={editForm.imageFit} onChange={(e) => setEditForm({ ...editForm, imageFit: e.target.value })}>
+                                <option value="cover">Crop to fill</option>
+                                <option value="contain">Show full image</option>
+                              </select>
+                            </label>
+                            <label>
+                              Horizontal: {editForm.imagePositionX}%
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={editForm.imagePositionX}
+                                onChange={(e) => setEditForm({ ...editForm, imagePositionX: Number(e.target.value) })}
+                              />
+                            </label>
+                            <label>
+                              Vertical: {editForm.imagePositionY}%
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={editForm.imagePositionY}
+                                onChange={(e) => setEditForm({ ...editForm, imagePositionY: Number(e.target.value) })}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : <h4>{category.name}</h4>}
                   <div className="category-card__header-actions">

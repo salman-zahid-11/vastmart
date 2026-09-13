@@ -1,5 +1,11 @@
 const Category = require('../models/Category');
 
+const normalizeImagePosition = (value, fallback = 50) => {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(100, Math.max(0, parsed));
+};
+
 // @desc   Get all active categories (public — used for dropdowns/filters)
 // @route  GET /api/categories
 const getActiveCategories = async (req, res) => {
@@ -41,6 +47,9 @@ const createCategory = async (req, res) => {
       name: name.trim(),
       subCategories: Array.isArray(subCategories) ? subCategories.filter(Boolean) : [],
       image: req.file?.path || '',
+      imageFit: req.body.imageFit === 'contain' ? 'contain' : 'cover',
+      imagePositionX: normalizeImagePosition(req.body.imagePositionX),
+      imagePositionY: normalizeImagePosition(req.body.imagePositionY),
       displayOrder: Number(displayOrder) || 0,
       createdBy: req.user._id,
     });
@@ -59,6 +68,15 @@ const updateCategory = async (req, res) => {
     if (req.body.name !== undefined && req.body.name.trim()) category.name = req.body.name.trim();
     if (req.body.displayOrder !== undefined) category.displayOrder = Number(req.body.displayOrder) || 0;
     if (req.file) category.image = req.file.path;
+    if (req.body.imageFit !== undefined) {
+      category.imageFit = req.body.imageFit === 'contain' ? 'contain' : 'cover';
+    }
+    if (req.body.imagePositionX !== undefined) {
+      category.imagePositionX = normalizeImagePosition(req.body.imagePositionX);
+    }
+    if (req.body.imagePositionY !== undefined) {
+      category.imagePositionY = normalizeImagePosition(req.body.imagePositionY);
+    }
     await category.save();
     res.status(200).json(category);
   } catch (error) {

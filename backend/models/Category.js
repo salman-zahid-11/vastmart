@@ -22,6 +22,23 @@ const categorySchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    imageFit: {
+      type: String,
+      enum: ['cover', 'contain'],
+      default: 'cover',
+    },
+    imagePositionX: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 50,
+    },
+    imagePositionY: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 50,
+    },
     displayOrder: {
       type: Number,
       default: 0,
