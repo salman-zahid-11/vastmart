@@ -93,7 +93,7 @@
 
 @media (min-width: 701px) {
   .admin-layout {
-    padding-top: 48px;
+    padding-top: 0;
   }
 }
 

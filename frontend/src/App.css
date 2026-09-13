@@ -9,7 +9,7 @@
 
 @media (min-width: 701px) {
   :root {
-    --desktop-navigation-height: 144px;
+    --desktop-navigation-height: 152px;
   }
 
   .desktop-sticky-navigation {
@@ -20,6 +20,12 @@
     z-index: 1000;
     background: var(--color-canvas-raised);
     box-shadow: 0 3px 14px rgba(24, 19, 48, 0.08);
+  }
+
+  .desktop-sticky-navigation .site-header,
+  .desktop-sticky-navigation .category-nav {
+    position: static;
+    top: auto;
   }
 
   .desktop-sticky-navigation-spacer {
