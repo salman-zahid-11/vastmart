@@ -29,6 +29,7 @@ import { useState } from 'react';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileSearchOverlay from './components/MobileSearchOverlay';
+import PromotionalPopup from './components/PromotionalPopup';
 import './App.css';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
       {/* Animated background - stays fixed behind the entire application */}
       <ScrollProgress />
       <AnimatedBackground />
+      <PromotionalPopup />
       <div className="desktop-sticky-navigation">
         <TopBar />
         <Header />

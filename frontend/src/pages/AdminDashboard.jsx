@@ -18,6 +18,7 @@ import { updateOrderStatus } from '../services/adminService';
 import { getAllNotices, createNotice, toggleNotice, deleteNotice } from '../services/noticeService';
 import { createNotification } from '../services/notificationService';
 import { getAllBanners, createBanner, toggleBanner, deleteBanner } from '../services/bannerService';
+import { getAllPopups, createPopup, updatePopup, togglePopup, deletePopup } from '../services/promotionalPopupService';
 import { getAllCoupons, createCoupon, toggleCoupon, deleteCoupon } from '../services/couponService';
 import { useAuth } from '../context/AuthContext';
 import { updateAdminLevel } from '../services/adminService';
@@ -51,6 +52,7 @@ function AdminDashboard() {
     { id: 'manage-admins', label: 'Manage Admins', superOnly: true },
     { id: 'coupons', label: 'Coupons', superOnly: true },
     { id: 'banners', label: 'Banners', superOnly: true },
+    { id: 'promotional-popups', label: 'Promo Popups' },
     { id: 'notices', label: 'Notices' },
     { id: 'notifications', label: 'Notifications', superOnly: true },
     { id: 'applications', label: 'Seller Applications' },
@@ -75,6 +77,7 @@ function AdminDashboard() {
   const [applications, setApplications] = useState([]);
   const [notices, setNotices] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [popups, setPopups] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [abandoned, setAbandoned] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -131,16 +134,25 @@ function AdminDashboard() {
       // rest of the dashboard for moderators.
       if (isSuperAdmin) {
         try {
-          const [bannersData, couponsData] = await Promise.all([
+          const [bannersData, couponsData, popupsData] = await Promise.all([
             getAllBanners(),
             getAllCoupons(),
+            getAllPopups(),
           ]);
           setBanners(Array.isArray(bannersData) ? bannersData : []);
           setCoupons(Array.isArray(couponsData) ? couponsData : []);
+          setPopups(Array.isArray(popupsData) ? popupsData : []);
         } catch (err) {
           console.error('Failed to load super-admin data', err);
           setBanners([]);
           setCoupons([]);
+          try {
+            const popupsData = await getAllPopups();
+            setPopups(Array.isArray(popupsData) ? popupsData : []);
+          } catch (err) {
+            console.error('Failed to load promotional popups', err);
+            setPopups([]);
+          }
         }
       } else {
         setBanners([]);
@@ -204,6 +216,7 @@ function AdminDashboard() {
         {activeSection === 'activity' && <ActivitySection activity={activity} />}
         {activeSection === 'banners' && <BannersSection banners={banners} setBanners={setBanners} />}
         {activeSection === 'coupons' && <CouponsSection coupons={coupons} setCoupons={setCoupons} />}
+        {activeSection === 'promotional-popups' && <PromotionalPopupsSection popups={popups} setPopups={setPopups} />}
         {activeSection === 'abandoned' && <AbandonedSection abandoned={abandoned} />}
         {activeSection === 'manage-admins' && <ManageAdminsSection users={users} setUsers={setUsers} />}
         {activeSection === 'categories' && <CategoriesSection categories={categories} setCategories={setCategories} />}
@@ -1184,6 +1197,106 @@ function BannersSection({ banners, setBanners }) {
   );
 }
 
+
+function PromotionalPopupsSection({ popups, setPopups }) {
+  const emptyForm = { title: '', link: '', duration: 5 };
+  const [form, setForm] = useState(emptyForm);
+  const [image, setImage] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
+  const [error, setError] = useState('');
+
+  const reset = () => {
+    setForm(emptyForm);
+    setImage(null);
+    setEditingId(null);
+    setError('');
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    if (!editingId && !image) {
+      setError('Please select a popup image');
+      return;
+    }
+    const data = new FormData();
+    if (image) data.append('image', image);
+    Object.entries(form).forEach(([key, value]) => data.append(key, value));
+    try {
+      const saved = editingId ? await updatePopup(editingId, data) : await createPopup(data);
+      setPopups((current) => editingId
+        ? current.map((popup) => (popup._id === editingId ? saved : popup))
+        : [saved, ...current]);
+      reset();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to save promotional popup');
+    }
+  };
+
+  const handleEdit = (popup) => {
+    setEditingId(popup._id);
+    setForm({ title: popup.title || '', link: popup.link || '', duration: popup.duration || 5 });
+    setImage(null);
+  };
+
+  const handleToggle = async (id) => {
+    setBusyId(id);
+    try {
+      const updated = await togglePopup(id);
+      setPopups((current) => current.map((popup) => (popup._id === id ? updated : popup)));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    setBusyId(id);
+    try {
+      await deletePopup(id);
+      setPopups((current) => current.filter((popup) => popup._id !== id));
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <h2 className="admin-content__title">Promotional Popup</h2>
+        {editingId && <button className="dashboard__action-btn" onClick={reset}>Cancel Edit</button>}
+      </div>
+      <p className="admin-section__description">The active popup appears once per visitor session and closes automatically after its duration. Admins and Super Admins can manage it here.</p>
+      <form className="banner-form popup-form" onSubmit={handleSubmit}>
+        {error && <p className="checkout-form__error">{error}</p>}
+        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setImage(event.target.files[0])} required={!editingId} />
+        <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Popup title (optional)" />
+        <input value={form.link} onChange={(event) => setForm({ ...form, link: event.target.value })} placeholder="Click link (optional)" />
+        <label>Display duration (seconds)
+          <input type="number" min="1" max="30" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} required />
+        </label>
+        <button className="dashboard__cta" type="submit">{editingId ? 'Save Popup Changes' : 'Add Popup'}</button>
+      </form>
+      <div className="banner-list">
+        {popups.map((popup) => (
+          <div key={popup._id} className="banner-list__item" style={{ opacity: busyId === popup._id ? 0.5 : 1 }}>
+            <img src={popup.image} alt={popup.title || 'Promotional popup'} className="banner-list__thumb" />
+            <div className="banner-list__info">
+              <span className={`pill pill--${popup.isActive ? 'success' : 'pending'}`}>{popup.isActive ? 'Active' : 'Inactive'}</span>
+              <p className="banner-list__title">{popup.title || 'Untitled popup'}</p>
+              <p className="banner-list__link">{popup.duration}s {popup.link ? `· ${popup.link}` : ''}</p>
+            </div>
+            <div className="banner-list__actions">
+              <button disabled={busyId === popup._id} onClick={() => handleEdit(popup)} className="dashboard__action-btn">Edit</button>
+              <button disabled={busyId === popup._id} onClick={() => handleToggle(popup._id)} className="dashboard__action-btn">{popup.isActive ? 'Deactivate' : 'Activate'}</button>
+              <button disabled={busyId === popup._id} onClick={() => handleDelete(popup._id)} className="dashboard__action-btn dashboard__action-btn--danger">Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 /* ===== Users ===== */
 function UsersSection({ users, setUsers, isSuperAdmin }) {
