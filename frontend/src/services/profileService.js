@@ -15,10 +15,14 @@ export const uploadAvatar = async (file) => {
   return response.data;
 };
 
+export const changePassword = async (data) => {
+  const response = await api.put('/auth/profile/password', data);
+  return response.data;
+};
+
 export const updateProduct = async (id, formData) => {
   const response = await api.put(`/products/${id}`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;
 };
-

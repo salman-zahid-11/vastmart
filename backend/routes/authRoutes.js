@@ -9,6 +9,7 @@ const {
   resetPassword,
   updateProfile,
   updateAvatar,
+  changePassword,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -20,6 +21,7 @@ router.post('/login', authLimiter, loginValidation, loginUser);
 router.get('/profile', protect, getProfile);
 router.put('/profile', protect, updateProfile);
 router.put('/profile/avatar', protect, upload.single('avatar'), updateAvatar);
+router.put('/profile/password', protect, changePassword);
 router.post('/forgot-password', passwordResetLimiter, forgotPassword);
 router.post('/verify-reset-code', authLimiter, verifyResetCode);
 router.post('/reset-password', authLimiter, resetPassword);
