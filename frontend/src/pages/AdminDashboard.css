@@ -91,6 +91,12 @@
   margin-bottom: 0;
 }
 
+@media (min-width: 851px) {
+  .admin-layout {
+    padding-top: 48px;
+  }
+}
+
 /* Stats grid (reuses stat-card from Dashboard.css) */
 .admin-stats {
   display: grid;
