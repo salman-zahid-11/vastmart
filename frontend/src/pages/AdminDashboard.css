@@ -855,6 +855,111 @@
   flex-shrink: 0;
 }
 
+.popup-form {
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(37, 28, 67, 0.06);
+}
+
+.popup-form__grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(280px, 1.2fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.popup-form__upload,
+.popup-form__fields {
+  display: grid;
+  gap: 12px;
+}
+
+.popup-form__preview {
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--color-primary-tint), var(--color-canvas));
+  color: var(--color-ink-faint);
+  font-size: 13px;
+}
+
+.popup-form__preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.popup-form__file {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-primary);
+  border-radius: 9px;
+  color: var(--color-primary);
+  background: var(--color-primary-tint);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.popup-form__file input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.popup-form__upload small {
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.popup-form__fields label {
+  display: grid;
+  gap: 6px;
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.popup-form__fields label span {
+  color: var(--color-ink-faint);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.popup-form__fields input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 9px;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-size: 13px;
+}
+
+.popup-form__fields input:focus {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary-tint);
+}
+
+@media (max-width: 700px) {
+  .popup-form {
+    padding: 16px;
+  }
+
+  .popup-form__grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
 @media (max-width: 650px) {
   .banner-form__layout {
     grid-template-columns: 1fr;

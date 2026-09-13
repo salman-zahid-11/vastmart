@@ -601,6 +601,7 @@ function CategoriesSection({ categories, setCategories }) {
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
+  const [preview, setPreview] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', displayOrder: 0, image: null });
 
@@ -1257,6 +1258,7 @@ function PromotionalPopupsSection({ popups, setPopups }) {
     setImage(null);
     setEditingId(null);
     setError('');
+    setPreview('');
   };
 
   const handleSubmit = async (event) => {
@@ -1284,6 +1286,14 @@ function PromotionalPopupsSection({ popups, setPopups }) {
     setEditingId(popup._id);
     setForm({ title: popup.title || '', link: popup.link || '', duration: popup.duration || 5 });
     setImage(null);
+    setPreview(popup.image || '');
+  };
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    setImage(file);
+    setPreview(URL.createObjectURL(file));
   };
 
   const handleToggle = async (id) => {
@@ -1315,13 +1325,30 @@ function PromotionalPopupsSection({ popups, setPopups }) {
       <p className="admin-section__description">The active popup appears once per visitor session and closes automatically after its duration. Admins and Super Admins can manage it here.</p>
       <form className="banner-form popup-form" onSubmit={handleSubmit}>
         {error && <p className="checkout-form__error">{error}</p>}
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setImage(event.target.files[0])} required={!editingId} />
-        <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="Popup title (optional)" />
-        <input value={form.link} onChange={(event) => setForm({ ...form, link: event.target.value })} placeholder="Click link (optional)" />
-        <label>Display duration (seconds)
-          <input type="number" min="1" max="30" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} required />
-        </label>
-        <button className="dashboard__cta" type="submit">{editingId ? 'Save Popup Changes' : 'Add Popup'}</button>
+        <div className="popup-form__grid">
+          <div className="popup-form__upload">
+            <div className="popup-form__preview">
+              {preview ? <img src={preview} alt="Popup preview" /> : <span>Preview image</span>}
+            </div>
+            <label className="popup-form__file">
+              <span>{image ? image.name : 'Choose popup image'}</span>
+              <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} required={!editingId} />
+            </label>
+            <small>JPG, PNG or WebP. Use a wide promotional image for the best result.</small>
+          </div>
+          <div className="popup-form__fields">
+            <label>Popup title <span>Optional</span>
+              <input value={form.title} onChange={(event) => setForm({ ...form, title: event.target.value })} placeholder="e.g. Weekend Mega Sale" />
+            </label>
+            <label>Click destination <span>Optional</span>
+              <input value={form.link} onChange={(event) => setForm({ ...form, link: event.target.value })} placeholder="e.g. /?category=Electronics" />
+            </label>
+            <label>Display duration <span>Seconds</span>
+              <input type="number" min="1" max="30" value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })} required />
+            </label>
+            <button className="dashboard__cta" type="submit">{editingId ? 'Save Popup Changes' : 'Add Popup'}</button>
+          </div>
+        </div>
       </form>
       <div className="banner-list">
         {popups.map((popup) => (
