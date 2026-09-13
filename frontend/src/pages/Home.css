@@ -182,8 +182,8 @@
 
 .products-load-more {
   display: block;
-  margin: var(--space-xl) auto 0;
-  padding: 11px 30px;
+  margin: var(--space-2xl) auto 0;
+  padding: 14px 38px;
   border: 2px solid var(--color-accent);
   border-radius: var(--radius-pill);
   color: var(--color-accent);
@@ -191,11 +191,14 @@
   font-size: 13px;
   font-weight: 700;
   text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
 .products-load-more:hover {
   color: white;
   background: var(--color-accent);
+  transform: translateY(-2px);
 }
 
 .products-grid__item {

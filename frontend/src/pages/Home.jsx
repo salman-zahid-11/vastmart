@@ -17,13 +17,29 @@ function Home() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const pageSize = 20;
+  const getPageSize = () => {
+    if (typeof window === 'undefined') return 20;
+    if (window.innerWidth <= 600) return 8;
+    if (window.innerWidth <= 900) return 12;
+    if (window.innerWidth <= 1150) return 16;
+    return 20;
+  };
+  const [pageSize, setPageSize] = useState(getPageSize);
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get('search') || '';
   const categoryFromUrl = searchParams.get('category') || '';
 
   const [filters, setFilters] = useState({ category: categoryFromUrl, minPrice: '', maxPrice: '' });
   const [sort, setSort] = useState('');
+
+  useEffect(() => {
+    const handleResize = () => {
+      const nextPageSize = getPageSize();
+      setPageSize((current) => (current === nextPageSize ? current : nextPageSize));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -64,7 +80,7 @@ function Home() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, categoryFromUrl, filters.category, filters.minPrice, filters.maxPrice, sort]);
+  }, [searchQuery, categoryFromUrl, filters.category, filters.minPrice, filters.maxPrice, sort, pageSize]);
 
   useEffect(() => {
     let active = true;
@@ -108,6 +124,7 @@ function Home() {
     filters.maxPrice,
     sort,
     page,
+    pageSize,
   ]);
 
   const handleLoadMore = () => setPage((currentPage) => currentPage + 1);
