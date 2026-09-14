@@ -42,6 +42,7 @@ function Register() {
     setLoading(true);
     try {
       const { confirmPassword, ...payload } = formData;
+      payload.termsAccepted = agreedToTerms;
       const response = await api.post('/auth/register', payload);
       login(response.data);
       navigate('/');
@@ -156,7 +157,9 @@ function Register() {
               checked={agreedToTerms}
               onChange={(e) => setAgreedToTerms(e.target.checked)}
             />
-            <span>I agree to VastMart's Terms of Service and Privacy Policy</span>
+            <span>
+              I agree to VastMart&apos;s <Link to="/terms">Terms and Conditions</Link> and Privacy Policy.
+            </span>
           </label>
 
           <button type="submit" disabled={loading} className="auth-form__submit">

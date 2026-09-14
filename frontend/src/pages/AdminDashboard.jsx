@@ -1725,21 +1725,41 @@ function UsersSection({ users, setUsers, isSuperAdmin }) {
                                     <td>
                     {isSuperAdmin ? (
                       u.status === 'active' ? (
-                        <button
-                          disabled={isUpdating}
-                          onClick={() => handleStatusChange(u._id, 'suspended')}
-                          className="dashboard__action-btn dashboard__action-btn--danger"
-                        >
-                          Suspend
-                        </button>
+                        <div className="admin-user-actions">
+                          <button
+                            disabled={isUpdating}
+                            onClick={() => handleStatusChange(u._id, 'suspended')}
+                            className="dashboard__action-btn dashboard__action-btn--danger"
+                          >
+                            Suspend
+                          </button>
+                          <button
+                            disabled={isUpdating}
+                            onClick={() => handleStatusChange(u._id, 'banned')}
+                            className="dashboard__action-btn dashboard__action-btn--danger"
+                          >
+                            Terminate
+                          </button>
+                        </div>
                       ) : (
-                        <button
-                          disabled={isUpdating}
-                          onClick={() => handleStatusChange(u._id, 'active')}
-                          className="dashboard__action-btn dashboard__action-btn--success"
-                        >
-                          Reactivate
-                        </button>
+                        <div className="admin-user-actions">
+                          <button
+                            disabled={isUpdating}
+                            onClick={() => handleStatusChange(u._id, 'active')}
+                            className="dashboard__action-btn dashboard__action-btn--success"
+                          >
+                            Reactivate
+                          </button>
+                          {u.status === 'suspended' && (
+                            <button
+                              disabled={isUpdating}
+                              onClick={() => handleStatusChange(u._id, 'banned')}
+                              className="dashboard__action-btn dashboard__action-btn--danger"
+                            >
+                              Terminate
+                            </button>
+                          )}
+                        </div>
                       )
                     ) : (
                       <span style={{ fontSize: '12px', color: 'var(--color-ink-faint)' }}>Super admin only</span>

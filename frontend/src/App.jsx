@@ -20,6 +20,7 @@ import Footer from './components/Footer';
 import SupportTickets from './pages/SupportTickets';
 import NewTicket from './pages/NewTicket';
 import TicketDetail from './pages/TicketDetail';
+import TermsAndConditions from './pages/TermsAndConditions';
 import AnimatedBackground from './components/AnimatedBackground';
 import ScrollProgress from './components/ScrollProgress';
 
@@ -101,6 +102,7 @@ function App() {
             <Route path="/support" element={<SupportTickets />} />
             <Route path="/support/new" element={<NewTicket />} />
             <Route path="/support/:id" element={<TicketDetail />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
           </Routes>
         </motion.div>
       </AnimatePresence>

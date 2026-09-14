@@ -239,6 +239,12 @@
   flex-shrink: 0;
 }
 
+.auth-form__checkbox a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
 
 .auth-steps {
   display: flex;

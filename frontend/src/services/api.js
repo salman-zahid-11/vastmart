@@ -16,12 +16,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// An expired or invalid token must not leave the app in a broken authenticated
-// state; clear it and let the user sign in again.
+// Keep the locally stored session intact for ordinary API failures. The server
+// remains responsible for rejecting expired or terminated accounts.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && !error.config?.url?.includes('/auth/login')) {
+    const message = error.response?.data?.message;
+    if (
+      (error.response?.status === 401 && message === 'User not found')
+      || (error.response?.status === 403 && typeof message === 'string' && message.startsWith('Account is '))
+    ) {
       localStorage.removeItem('userInfo');
       if (window.location.pathname !== '/login') {
         window.location.assign('/login');

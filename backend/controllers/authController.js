@@ -12,11 +12,14 @@ const hashResetCode = (code) => crypto.createHash('sha256').update(String(code))
 // @route  POST /api/auth/register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password, phone, termsAccepted } = req.body;
 
     // 1. Basic validation
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Please fill all required fields' });
+    }
+    if (termsAccepted !== true && termsAccepted !== 'true') {
+      return res.status(400).json({ message: 'You must accept the Terms and Conditions to register' });
     }
 
     // 2. Check if user already exists
@@ -34,6 +37,7 @@ const registerUser = async (req, res) => {
       name,
       email,
       phone,
+      termsAcceptedAt: new Date(),
       password: hashedPassword,
     });
 
