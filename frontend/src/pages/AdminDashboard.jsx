@@ -47,6 +47,7 @@ import './AdminDashboard.css';
 const removeImageBackground = (file) => new Promise((resolve, reject) => {
   const sourceUrl = URL.createObjectURL(file);
   const image = new Image();
+  image.crossOrigin = 'anonymous';
   image.onload = () => {
     URL.revokeObjectURL(sourceUrl);
     const canvas = document.createElement('canvas');
@@ -58,7 +59,13 @@ const removeImageBackground = (file) => new Promise((resolve, reject) => {
       return;
     }
     context.drawImage(image, 0, 0);
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    let imageData;
+    try {
+      imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    } catch (error) {
+      reject(new Error('This image cannot be edited because its host blocks browser image access. Please upload the image again.'));
+      return;
+    }
     const { data, width, height } = imageData;
     const background = [data[0], data[1], data[2]];
     const visited = new Uint8Array(width * height);
@@ -679,10 +686,21 @@ function CategoriesSection({ categories, setCategories }) {
   });
   const [imagePreview, setImagePreview] = useState('');
   const [processingImage, setProcessingImage] = useState(false);
+  const [newImagePreview, setNewImagePreview] = useState('');
+  const [newImageSettings, setNewImageSettings] = useState({
+    imageFit: 'cover',
+    imagePositionX: 50,
+    imagePositionY: 50,
+    imageZoom: 100,
+  });
 
   useEffect(() => () => {
     if (imagePreview.startsWith('blob:')) URL.revokeObjectURL(imagePreview);
   }, [imagePreview]);
+
+  useEffect(() => () => {
+    if (newImagePreview.startsWith('blob:')) URL.revokeObjectURL(newImagePreview);
+  }, [newImagePreview]);
 
   const handleCreateCategory = async (e) => {
     e.preventDefault();
@@ -693,12 +711,18 @@ function CategoriesSection({ categories, setCategories }) {
       const data = new FormData();
       data.append('name', newCategoryName.trim());
       data.append('displayOrder', newCategoryOrder);
+      data.append('imageFit', newImageSettings.imageFit);
+      data.append('imagePositionX', newImageSettings.imagePositionX);
+      data.append('imagePositionY', newImageSettings.imagePositionY);
+      data.append('imageZoom', newImageSettings.imageZoom);
       if (newCategoryImage) data.append('image', newCategoryImage);
       const created = await createCategory(data);
       setCategories((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name)));
       setNewCategoryName('');
       setNewCategoryImage(null);
       setNewCategoryOrder(0);
+      setNewImagePreview('');
+      setNewImageSettings({ imageFit: 'cover', imagePositionX: 50, imagePositionY: 50, imageZoom: 100 });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create category');
     } finally {
@@ -750,14 +774,26 @@ function CategoriesSection({ categories, setCategories }) {
   };
 
   const handleRemoveBackground = async () => {
-    if (!editForm.image) {
-      setError('Choose a replacement image before removing its background.');
+    let sourceFile = editForm.image;
+    if (!sourceFile && imagePreview && !imagePreview.startsWith('blob:')) {
+      try {
+        const response = await fetch(imagePreview);
+        if (!response.ok) throw new Error('Image could not be loaded for editing');
+        const blob = await response.blob();
+        sourceFile = new File([blob], 'category-image.png', { type: blob.type || 'image/png' });
+      } catch (err) {
+        setError('Choose a replacement image before removing its background.');
+        return;
+      }
+    }
+    if (!sourceFile) {
+      setError('Choose an image before removing its background.');
       return;
     }
     setProcessingImage(true);
     setError('');
     try {
-      const processed = await removeImageBackground(editForm.image);
+      const processed = await removeImageBackground(sourceFile);
       handleImageFile(processed);
     } catch (err) {
       setError(err.message || 'Failed to remove image background');
@@ -826,12 +862,76 @@ function CategoriesSection({ categories, setCategories }) {
           onChange={(e) => setNewCategoryName(e.target.value)}
           placeholder="e.g. Toys & Games"
         />
-        <input type="number" min="0" value={newCategoryOrder} onChange={(e) => setNewCategoryOrder(e.target.value)} placeholder="Order" aria-label="Display order" />
-        <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => setNewCategoryImage(e.target.files[0])} />
+        <input         type="number" min="0" value={newCategoryOrder} onChange={(e) => setNewCategoryOrder(e.target.value)} placeholder="Order" aria-label="Display order" />
+        <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          if (newImagePreview.startsWith('blob:')) URL.revokeObjectURL(newImagePreview);
+          setNewCategoryImage(file);
+          setNewImagePreview(URL.createObjectURL(file));
+        }}
+        />
         <button type="submit" disabled={submitting || !newCategoryName.trim()} className="dashboard__cta">
-          {submitting ? 'Adding...' : 'Add Category'}
+        {submitting ? 'Adding...' : 'Add Category'}
         </button>
       </form>
+
+      {newImagePreview && (
+        <div className="category-card__image-editor category-card__image-editor--new">
+        <div className="category-card__image-preview">
+          <img
+            src={newImagePreview}
+            alt="New category preview"
+            style={{
+              objectFit: newImageSettings.imageFit,
+              objectPosition: `${newImageSettings.imagePositionX}% ${newImageSettings.imagePositionY}%`,
+              transform: `translate(${(50 - newImageSettings.imagePositionX) * 0.8}%, ${(50 - newImageSettings.imagePositionY) * 0.8}%) scale(${newImageSettings.imageZoom / 100})`,
+            }}
+          />
+        </div>
+        <div className="category-card__image-controls">
+          <strong>Preview before adding</strong>
+          <label>
+            Fit
+            <select value={newImageSettings.imageFit} onChange={(e) => setNewImageSettings({ ...newImageSettings, imageFit: e.target.value })}>
+              <option value="cover">Crop to fill</option>
+              <option value="contain">Show full image</option>
+            </select>
+          </label>
+          <label>
+            Horizontal: {newImageSettings.imagePositionX}%
+            <input type="range" min="0" max="100" value={newImageSettings.imagePositionX} onChange={(e) => setNewImageSettings({ ...newImageSettings, imagePositionX: Number(e.target.value) })} />
+          </label>
+          <label>
+            Vertical: {newImageSettings.imagePositionY}%
+            <input type="range" min="0" max="100" value={newImageSettings.imagePositionY} onChange={(e) => setNewImageSettings({ ...newImageSettings, imagePositionY: Number(e.target.value) })} />
+          </label>
+          <label>
+            Zoom: {newImageSettings.imageZoom}%
+            <input type="range" min="100" max="300" value={newImageSettings.imageZoom} onChange={(e) => setNewImageSettings({ ...newImageSettings, imageZoom: Number(e.target.value) })} />
+          </label>
+          <button type="button" className="dashboard__action-btn" onClick={async () => {
+            setProcessingImage(true);
+            setError('');
+            try {
+              const processed = await removeImageBackground(newCategoryImage);
+              if (newImagePreview.startsWith('blob:')) URL.revokeObjectURL(newImagePreview);
+              setNewCategoryImage(processed);
+              setNewImagePreview(URL.createObjectURL(processed));
+            } catch (err) {
+              setError(err.message || 'Failed to remove image background');
+            } finally {
+              setProcessingImage(false);
+            }
+          }} disabled={processingImage || !newCategoryImage}>
+            {processingImage ? 'Removing...' : 'Remove background'}
+          </button>
+        </div>
+        </div>
+      )}
 
       {categories.length === 0 ? (
         <div className="dashboard__empty"><p>No categories yet.</p></div>

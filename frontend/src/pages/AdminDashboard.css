@@ -1093,6 +1093,15 @@
   border-radius: var(--radius-sm);
 }
 
+.category-card__image-editor--new {
+  margin: 0 0 var(--space-lg);
+}
+
+.category-card__image-controls strong {
+  color: var(--color-ink);
+  font-size: 13px;
+}
+
 .category-card__image-preview {
   width: 120px;
   aspect-ratio: 1;
