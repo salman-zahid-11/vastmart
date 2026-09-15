@@ -26,12 +26,22 @@ import ScrollProgress from './components/ScrollProgress';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import MobileMenuDrawer from './components/MobileMenuDrawer';
 import MobileBottomNav from './components/MobileBottomNav';
 import MobileSearchOverlay from './components/MobileSearchOverlay';
 import PromotionalPopup from './components/PromotionalPopup';
 import './App.css';
+
+function ScrollToTop() {
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [location.pathname, location.search]);
+
+  return null;
+}
 
 function App() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -43,6 +53,7 @@ function App() {
     <div>
       {/* Animated background - stays fixed behind the entire application */}
       <ScrollProgress />
+      <ScrollToTop />
       <AnimatedBackground />
       <PromotionalPopup />
       <div className="desktop-sticky-navigation">

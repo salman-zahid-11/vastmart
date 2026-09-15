@@ -17,12 +17,11 @@
 }
 
 .topbar__ticker-track {
-  display: flex;
-  gap: 80px;
+  display: block;
   white-space: nowrap;
   width: max-content;
-  animation: ticker 18s linear infinite;
-  padding-left: var(--space-xl);
+  padding-left: 100%;
+  animation: ticker 16s linear infinite;
 }
 
 .topbar__message {
@@ -31,7 +30,7 @@
 
 @keyframes ticker {
   from { transform: translateX(0); }
-  to { transform: translateX(-33.333%); }
+  to { transform: translateX(-100%); }
 }
 
 .topbar__contact {

@@ -7,13 +7,13 @@ const WHATSAPP_NUMBER = '8801570263779';
 const DEFAULT_MESSAGE = "Free delivery inside Dhaka on orders over ৳1000";
 
 function TopBar() {
-  const [messages, setMessages] = useState([DEFAULT_MESSAGE]);
+  const [message, setMessage] = useState(DEFAULT_MESSAGE);
 
   useEffect(() => {
     getActiveNotices()
       .then((notices) => {
-        if (notices.length > 0) {
-          setMessages(notices.map((n) => n.message));
+        if (notices.length > 0 && notices[0].message) {
+          setMessage(notices[0].message);
         }
       })
       .catch(() => {
@@ -21,15 +21,11 @@ function TopBar() {
       });
   }, []);
 
-  const trackContent = [...messages, ...messages, ...messages];
-
   return (
     <div className="topbar">
       <div className="topbar__ticker">
         <div className="topbar__ticker-track">
-          {trackContent.map((msg, i) => (
-            <span key={i} className="topbar__message">{msg}</span>
-          ))}
+          <span className="topbar__message">{message}</span>
         </div>
       </div>
       <div className="topbar__contact">
