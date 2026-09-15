@@ -14,6 +14,7 @@ const {
     getDashboardStats,
     getAllUsers,
     updateUserStatus,
+    logoutAllUsers,
     getAllOrdersAdmin,
     getActivityLog,
     updateAdminLevel,
@@ -47,6 +48,14 @@ router.put(
     authorizeRoles('admin'),
     requireSuperAdmin,
     updateUserStatus
+);
+
+router.post(
+    '/security/logout-all',
+    protect,
+    authorizeRoles('admin'),
+    requireSuperAdmin,
+    logoutAllUsers
 );
 
 router.put(

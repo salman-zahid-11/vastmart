@@ -64,6 +64,11 @@ const userSchema = new mongoose.Schema(
       enum: ['active', 'suspended', 'banned'],
       default: 'active',
     },
+    authTokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     resetPasswordCode: {
       type: String,
       default: null,

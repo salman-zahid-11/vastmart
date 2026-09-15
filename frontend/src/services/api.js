@@ -24,6 +24,7 @@ api.interceptors.response.use(
     const message = error.response?.data?.message;
     if (
       (error.response?.status === 401 && message === 'User not found')
+      || (error.response?.status === 401 && message === 'Session invalidated. Please log in again.')
       || (error.response?.status === 403 && typeof message === 'string' && message.startsWith('Account is '))
     ) {
       localStorage.removeItem('userInfo');

@@ -80,6 +80,42 @@
   margin-bottom: var(--space-lg);
 }
 
+.security-card {
+  max-width: 680px;
+  padding: var(--space-xl);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.security-card h3 {
+  margin-bottom: var(--space-sm);
+}
+
+.security-card p {
+  color: var(--color-ink-muted);
+  line-height: 1.6;
+}
+
+.security-card__note {
+  font-size: 13px;
+  margin: var(--space-md) 0;
+}
+
+.security-card__success,
+.security-card__error {
+  margin-top: var(--space-md);
+  font-size: 13px;
+}
+
+.security-card__success {
+  color: var(--color-success, #16803c) !important;
+}
+
+.security-card__error {
+  color: var(--color-danger, #c0392b) !important;
+}
+
 .admin-content__header {
   display: flex;
   justify-content: space-between;

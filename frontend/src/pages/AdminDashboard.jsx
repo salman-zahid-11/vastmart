@@ -12,6 +12,7 @@ import {
   getTopProducts,
   getTopSellers,
   getOrderStatusBreakdown,
+  logoutAllUsers,
 } from '../services/adminService';
 import { getAllApplications, reviewApplication } from '../services/sellerApplicationService';
 import { updateOrderStatus } from '../services/adminService';
@@ -119,7 +120,7 @@ const removeImageBackground = (file) => new Promise((resolve, reject) => {
 
 
 function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const isSuperAdmin = user?.adminLevel === 'super_admin';
   const ALL_SECTIONS = [
     { id: 'overview', label: 'Overview' },
@@ -129,6 +130,7 @@ function AdminDashboard() {
     { id: 'promotional-popups', label: 'Promo Popups' },
     { id: 'notices', label: 'Notices' },
     { id: 'notifications', label: 'Notifications', superOnly: true },
+    { id: 'security', label: 'Security', superOnly: true },
     { id: 'applications', label: 'Seller Applications' },
     { id: 'users', label: 'Users' },
     { id: 'products', label: 'Products' },
@@ -276,6 +278,7 @@ function AdminDashboard() {
         {activeSection === 'overview' && <OverviewSection stats={stats} />}
         {activeSection === 'notices' && <NoticesSection notices={notices} setNotices={setNotices} />}
         {activeSection === 'notifications' && <NotificationsSection users={users} />}
+        {activeSection === 'security' && <SecuritySection logout={logout} />}
         {activeSection === 'applications' && (
           <ApplicationsSection applications={applications} setApplications={setApplications} refreshAll={fetchAll} />
         )}
@@ -1770,6 +1773,67 @@ function UsersSection({ users, setUsers, isSuperAdmin }) {
             })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+/* ===== Security ===== */
+function SecuritySection({ logout }) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogoutAll = async () => {
+    const confirmed = window.confirm(
+      'Log out every account, including your Super Admin session? Everyone will need to sign in again.',
+    );
+    if (!confirmed) return;
+
+    setIsLoggingOut(true);
+    setMessage('');
+    setError('');
+    try {
+      const result = await logoutAllUsers();
+      setMessage(`${result.message} Redirecting you to the login page...`);
+      setTimeout(() => {
+        logout();
+        window.location.assign('/login');
+      }, 1200);
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'Unable to invalidate user sessions.');
+      setIsLoggingOut(false);
+    }
+  };
+
+  return (
+    <div>
+      <div className="admin-content__header">
+        <div>
+          <h2 className="admin-content__title">Security</h2>
+          <p className="admin-content__subtitle">Manage emergency session controls for the entire platform.</p>
+        </div>
+      </div>
+      <div className="dashboard-card security-card">
+        <h3>Global session logout</h3>
+        <p>
+          Immediately invalidate every active account session. This is useful if you suspect
+          unauthorized access or need to perform an emergency security reset.
+        </p>
+        <p className="security-card__note">
+          All customers, sellers, moderators, and Super Admins will be required to sign in again.
+          This action cannot be undone.
+        </p>
+        <button
+          type="button"
+          className="dashboard__action-btn dashboard__action-btn--danger"
+          onClick={handleLogoutAll}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? 'Invalidating sessions...' : 'Log out all users'}
+        </button>
+        {message && <p className="security-card__success">{message}</p>}
+        {error && <p className="security-card__error">{error}</p>}
       </div>
     </div>
   );

@@ -55,7 +55,7 @@ const registerUser = async (req, res) => {
       role: user.role,
       adminLevel: user.adminLevel,
       avatar: user.avatar,
-      token: generateAccessToken(user._id),
+      token: generateAccessToken(user._id, user.authTokenVersion),
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -153,7 +153,7 @@ try {
       role: user.role,
       adminLevel: user.adminLevel,
       avatar: user.avatar,
-      token: generateAccessToken(user._id),
+      token: generateAccessToken(user._id, user.authTokenVersion),
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

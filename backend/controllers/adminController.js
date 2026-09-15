@@ -119,6 +119,21 @@ const updateUserStatus = async (req, res) => {
   }
 };
 
+// @desc   Invalidate every user's active session
+// @route  POST /api/admin/security/logout-all
+const logoutAllUsers = async (req, res) => {
+  try {
+    const result = await User.updateMany({}, { $inc: { authTokenVersion: 1 } });
+
+    res.status(200).json({
+      message: 'All user sessions have been invalidated. Users must log in again.',
+      invalidatedUsers: result.modifiedCount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
 // @desc   Get ALL orders platform-wide
 // @route  GET /api/admin/orders
 const getAllOrdersAdmin = async (req, res) => {
@@ -314,6 +329,7 @@ module.exports = {
   getDashboardStats,
   getAllUsers,
   updateUserStatus,
+  logoutAllUsers,
   getAllOrdersAdmin,
   getActivityLog,
   updateAdminLevel,

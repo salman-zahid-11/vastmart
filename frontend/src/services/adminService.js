@@ -30,6 +30,11 @@ export const updateUserStatus = async (userId, status) => {
   return response.data;
 };
 
+export const logoutAllUsers = async () => {
+  const response = await api.post('/admin/security/logout-all');
+  return response.data;
+};
+
 export const getAllOrdersAdmin = async () => {
   const response = await api.get('/admin/orders');
   return response.data;

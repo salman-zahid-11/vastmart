@@ -11,13 +11,16 @@ const protect = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       // 2. Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET, { maxAge: '15d' });
 
       // 3. Attach user (without password) to request object
       req.user = await User.findById(decoded.id).select('-password');
 
       if (!req.user) {
         return res.status(401).json({ message: 'User not found' });
+      }
+      if ((decoded.authTokenVersion ?? 0) !== req.user.authTokenVersion) {
+        return res.status(401).json({ message: 'Session invalidated. Please log in again.' });
       }
       if (req.user.status !== 'active') {
         return res.status(403).json({ message: `Account is ${req.user.status}` });
