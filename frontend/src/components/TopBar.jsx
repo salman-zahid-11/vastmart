@@ -4,10 +4,9 @@ import './TopBar.css';
 
 const PHONE_NUMBER = '+8801570263779';
 const WHATSAPP_NUMBER = '8801570263779';
-const DEFAULT_MESSAGE = "Free delivery inside Dhaka on orders over ৳1000";
 
 function TopBar() {
-  const [message, setMessage] = useState(DEFAULT_MESSAGE);
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     getActiveNotices()
@@ -23,11 +22,13 @@ function TopBar() {
 
   return (
     <div className="topbar">
-      <div className="topbar__ticker">
-        <div className="topbar__ticker-track">
-          <span className="topbar__message">{message}</span>
+      {message && (
+        <div className="topbar__ticker">
+          <div className="topbar__ticker-track">
+            <span className="topbar__message">{message}</span>
+          </div>
         </div>
-      </div>
+      )}
       <div className="topbar__contact">
         <a href={`tel:${PHONE_NUMBER}`}>📞 {PHONE_NUMBER}</a>
         <span className="topbar__divider">|</span>
