@@ -4,13 +4,14 @@ import { useCart } from '../context/CartContext';
 import { createOrder } from '../services/orderService';
 import { validateCoupon } from '../services/couponService';
 import './Checkout.css';
-import { districts, locationData } from '../data/bangladeshLocations';
+import { districts, locationData, thanaDataByDistrict } from '../data/bangladeshLocations';
 import { generateOrderWhatsAppMessage } from '../utils/generateWhatsAppMessage';
 
 function LocationPicker({ prefix, address, onChange }) {
   const [districtSearch, setDistrictSearch] = useState('');
   const visibleDistricts = districts.filter((district) => district.toLowerCase().includes(districtSearch.toLowerCase()));
-  const locationOptions = locationData[address.city] || [];
+  const thanaOptions = thanaDataByDistrict[address.city] || [];
+  const upazilaOptions = locationData[address.city] || [];
 
   return (
     <div className="checkout-location-picker">
@@ -26,14 +27,14 @@ function LocationPicker({ prefix, address, onChange }) {
         <label htmlFor={`${prefix}-thana`}>Thana <small>(optional if upazila is selected)</small></label>
         <select id={`${prefix}-thana`} name={`${prefix}Thana`} value={address.thana || ''} onChange={(e) => onChange({ thana: e.target.value })} disabled={!address.city}>
           <option value="">{address.city ? 'Select thana (optional)' : 'Select district first'}</option>
-          {locationOptions.map((location) => <option key={`thana-${location}`} value={location}>{location}</option>)}
+          {thanaOptions.map((thana) => <option key={`thana-${thana}`} value={thana}>{thana}</option>)}
         </select>
       </div>
       <div className="checkout-form__field">
         <label htmlFor={`${prefix}-upazila`}>Upazila <small>(optional if thana is selected)</small></label>
         <select id={`${prefix}-upazila`} name={`${prefix}Upazila`} value={address.upazila || ''} onChange={(e) => onChange({ upazila: e.target.value })} disabled={!address.city}>
           <option value="">{address.city ? 'Select upazila (optional)' : 'Select district first'}</option>
-          {locationOptions.map((location) => <option key={`upazila-${location}`} value={location}>{location}</option>)}
+          {upazilaOptions.map((upazila) => <option key={`upazila-${upazila}`} value={upazila}>{upazila}</option>)}
         </select>
       </div>
       <p className="checkout-location-picker__hint">Select either thana or upazila. Only one is required.</p>
