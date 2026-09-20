@@ -144,7 +144,6 @@ function Checkout() {
     }
     setError('');
     setLoading(true);
-    const whatsappWindow = channel === 'whatsapp' ? window.open('', '_blank') : null;
 
     try {
       const order = await createOrder({
@@ -154,9 +153,11 @@ function Checkout() {
         couponCode: appliedCoupon?.code,
       });
 
-      if (whatsappWindow) {
-        whatsappWindow.location.href = `https://wa.me/8801570263779?text=${generateOrderWhatsAppMessage(order)}`;
+      if (channel === 'whatsapp') {
+        window.location.assign(`https://wa.me/8801570263779?text=${generateOrderWhatsAppMessage(order)}`);
+        return;
       }
+
       navigate(`/order-confirmation/${order._id}`);
       refreshCart().catch((err) => console.error('Failed to refresh cart:', err));
     } catch (err) {
