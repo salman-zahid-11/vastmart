@@ -5,6 +5,7 @@ import { getMySales } from '../services/orderService';
 import { getAbandonedActivity } from '../services/activityService';
 import AnimatedCounter from '../components/AnimatedCounter';
 import './Dashboard.css';
+import { getOrderId } from '../utils/getOrderId';
 
 function SellerDashboard() {
   const [products, setProducts] = useState([]);
@@ -125,7 +126,7 @@ function SellerDashboard() {
               <tbody>
                 {sales.map((order) => (
                   <tr key={order._id}>
-                    <td className="dashboard__table-mono">#{order._id.slice(-8).toUpperCase()}</td>
+                    <td className="dashboard__table-mono">#{getOrderId(order)}</td>
                     <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                     <td>
                       <span className={`pill pill--status-${order.orderStatus}`}>{order.orderStatus}</span>

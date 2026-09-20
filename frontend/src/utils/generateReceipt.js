@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import logoUrl from '../assets/logo_vastmart.png';
+import { getOrderId } from './getOrderId';
 
 async function loadLogo() {
   const response = await fetch(logoUrl);
@@ -27,7 +28,7 @@ export async function generateReceiptPDF(order) {
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 50;
   const contentWidth = pageWidth - margin * 2;
-  const orderId = order._id.slice(-8).toUpperCase();
+  const orderId = getOrderId(order);
   let y = 54;
 
   // Subtle centered watermark behind the receipt content.

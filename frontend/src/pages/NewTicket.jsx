@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createTicket } from '../services/ticketService';
 import { getMyOrders } from '../services/orderService';
 import './SupportTickets.css';
+import { getOrderId } from '../utils/getOrderId';
 
 const CATEGORIES = [
   { value: 'order_issue', label: 'Order Issue' },
@@ -87,7 +88,7 @@ function NewTicket() {
               <option value="">None</option>
               {orders.map((o) => (
                 <option key={o._id} value={o._id}>
-                  #{o._id.slice(-8).toUpperCase()} — ৳{o.totalAmount} ({new Date(o.createdAt).toLocaleDateString()})
+                  #{getOrderId(o)} — ৳{o.totalAmount} ({new Date(o.createdAt).toLocaleDateString()})
                 </option>
               ))}
             </select>

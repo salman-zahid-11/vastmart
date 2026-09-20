@@ -5,6 +5,7 @@ import { createOrder } from '../services/orderService';
 import { validateCoupon } from '../services/couponService';
 import './Checkout.css';
 import { districts, locationData } from '../data/bangladeshLocations';
+import { generateOrderWhatsAppMessage } from '../utils/generateWhatsAppMessage';
 
 function LocationPicker({ prefix, address, onChange }) {
   const [districtSearch, setDistrictSearch] = useState('');
@@ -96,10 +97,27 @@ function Checkout() {
     setCouponError('');
   };
 
-  const handleSubmit = async (e) => {
+  const isCheckoutValid = Boolean(
+    formData.fullName.trim()
+    && formData.email.trim()
+    && formData.phone.trim()
+    && formData.street.trim()
+    && formData.city
+    && formData.thana
+    && formData.country.trim()
+    && (billingSameAsShipping
+      || (billingAddress.street.trim() && billingAddress.city && billingAddress.thana && billingAddress.country.trim())),
+  );
+
+  const handleSubmit = async (e, channel = 'checkout') => {
     e.preventDefault();
+    if (!document.getElementById('checkout-form')?.checkValidity()) {
+      document.getElementById('checkout-form')?.reportValidity();
+      return;
+    }
     setError('');
     setLoading(true);
+    const whatsappWindow = channel === 'whatsapp' ? window.open('', '_blank') : null;
 
     try {
       const order = await createOrder({
@@ -109,6 +127,9 @@ function Checkout() {
         couponCode: appliedCoupon?.code,
       });
 
+      if (whatsappWindow) {
+        whatsappWindow.location.href = `https://wa.me/8801570263779?text=${generateOrderWhatsAppMessage(order)}`;
+      }
       navigate(`/order-confirmation/${order._id}`);
       refreshCart().catch((err) => console.error('Failed to refresh cart:', err));
     } catch (err) {
@@ -262,7 +283,15 @@ function Checkout() {
             <span>Total</span>
             <span>৳{total}</span>
           </div>
-          <button type="submit" form="checkout-form" disabled={loading} className="checkout-form__submit">
+          <button
+            type="button"
+            disabled={loading || !isCheckoutValid}
+            className="checkout-form__submit checkout-form__submit--whatsapp"
+            onClick={(event) => handleSubmit(event, 'whatsapp')}
+          >
+            {loading ? 'Preparing...' : 'Order on WhatsApp'}
+          </button>
+          <button type="submit" form="checkout-form" disabled={loading || !isCheckoutValid} className="checkout-form__submit">
             {loading ? 'Placing order...' : `Place Order — ৳${total}`}
           </button>
           </section>

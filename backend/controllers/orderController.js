@@ -5,6 +5,7 @@ const Product = require('../models/Product');
 const logActivity = require('../utils/logActivity');
 const validateCouponLogic = require('../utils/validateCouponLogic');
 const VisitorActivity = require('../models/VisitorActivity');
+const crypto = require('crypto');
 
 
 // @desc   Create a new order from the user's cart
@@ -79,8 +80,15 @@ const createOrder = async (req, res) => {
 
     const totalAmount = itemsTotal + shippingFee - appliedDiscount;
 
+    // Keep a short, human-friendly reference separate from MongoDB's internal _id.
+    let orderReference;
+    do {
+      orderReference = `VM-${Date.now().toString(36).slice(-6).toUpperCase()}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+    } while (await Order.exists({ orderId: orderReference }));
+
     // 3. Create the order
     const order = await Order.create({
+      orderId: orderReference,
       user: req.user._id,
       items: orderItems,
       shippingAddress,
@@ -204,7 +212,7 @@ const updateOrderStatus = async (req, res) => {
     await logActivity({
       user: req.user,
       action: 'order_placed', // reused enum — see note below
-      description: `Admin updated order #${order._id.toString().slice(-8).toUpperCase()} to "${orderStatus}"`,
+      description: `Admin updated order #${order.orderId || order._id.toString().slice(-8).toUpperCase()} to "${orderStatus}"`,
       meta: { orderId: order._id },
     });
 

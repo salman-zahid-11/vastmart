@@ -26,6 +26,12 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    orderId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      index: true,
+    },
     items: [orderItemSchema],
     shippingAddress: {
       fullName: { type: String, required: true },

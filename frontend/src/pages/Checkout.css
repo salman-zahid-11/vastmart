@@ -239,6 +239,15 @@
   transition: background var(--duration-fast) var(--ease-out);
 }
 
+.checkout-form__submit--whatsapp {
+  background: #16a765;
+  margin-bottom: 10px;
+}
+
+.checkout-form__submit--whatsapp:hover:not(:disabled) {
+  background: #128c54;
+}
+
 .checkout-form__submit:hover:not(:disabled) {
   background: var(--color-primary-hover);
 }

@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getOrderById } from '../services/orderService';
 import { generateReceiptPDF } from '../utils/generateReceipt';
 import { generateOrderWhatsAppMessage } from '../utils/generateWhatsAppMessage';
+import { getOrderId } from '../utils/getOrderId';
 import OrderStatusTracker from '../components/OrderStatusTracker';
 import './OrderConfirmation.css';
 
@@ -59,7 +60,7 @@ function OrderConfirmation() {
         <p className="confirmation-hero__eyebrow">Order confirmed</p>
         <h1 className="confirmation-hero__title">Thank you, {addr.fullName.split(' ')[0]} — it's on its way.</h1>
         <p className="confirmation-hero__id">
-          Order <span>#{order._id.slice(-8).toUpperCase()}</span> · Placed {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+          Order <span>#{getOrderId(order)}</span> · Placed {new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
         </p>
       </div>
 

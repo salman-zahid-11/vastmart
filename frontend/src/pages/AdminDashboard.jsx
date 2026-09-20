@@ -44,6 +44,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import AnimatedCounter from '../components/AnimatedCounter';
 import './AdminDashboard.css';
+import { getOrderId } from '../utils/getOrderId';
 
 const removeImageBackground = (file) => new Promise((resolve, reject) => {
   const sourceUrl = URL.createObjectURL(file);
@@ -2405,7 +2406,7 @@ function OrdersSection({ orders, setOrders }) {
               const isUpdating = updatingId === order._id;
               return (
                 <tr key={order._id} style={{ opacity: isUpdating ? 0.5 : 1 }}>
-                  <td className="admin-table__mono">#{String(order._id || '').slice(-8).toUpperCase()}</td>
+                  <td className="admin-table__mono">#{getOrderId(order)}</td>
                   <td>{order.user?.name || 'Unknown'}</td>
                   <td>{new Date(order.createdAt).toLocaleDateString()}</td>
                   <td><span className={`pill pill--status-${order.orderStatus}`}>{order.orderStatus}</span></td>

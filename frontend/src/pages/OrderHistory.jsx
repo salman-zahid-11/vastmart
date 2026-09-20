@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getMyOrders } from '../services/orderService';
+import { getOrderId } from '../utils/getOrderId';
 
 function OrderHistory() {
   const [orders, setOrders] = useState([]);
@@ -51,7 +52,7 @@ function OrderHistory() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
             <div>
-              <strong>Order #{order._id.slice(-8).toUpperCase()}</strong>
+              <strong>Order #{getOrderId(order)}</strong>
               <p style={{ margin: '4px 0', color: '#888', fontSize: '14px' }}>
                 Placed on {new Date(order.createdAt).toLocaleDateString()}
               </p>

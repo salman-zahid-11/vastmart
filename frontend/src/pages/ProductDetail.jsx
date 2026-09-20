@@ -137,31 +137,6 @@ function ProductDetail() {
 
   const hasDiscount = Boolean(product.discountPrice);
   const currentPrice = product.discountPrice || product.price;
-  const whatsappNumber = '8801570263779';
-  const orderReference = `VM${Date.now().toString(36).slice(-8).toUpperCase()}`;
-  const customerName = user?.name || 'Guest customer';
-  const customerPhone = user?.phone || 'Not provided';
-  const customerEmail = user?.email || 'Not provided';
-  const itemsTotal = currentPrice * quantity;
-  const whatsappMessage = encodeURIComponent(`Order ID: #${orderReference}
-Customer: ${customerName}
-Phone: ${customerPhone}
-Email: ${customerEmail}
-
-Items:
-* ${product.name} × ${quantity} — ৳${itemsTotal}
-
-Subtotal: ৳${itemsTotal}
-Shipping: ৳60
-Total: ৳${itemsTotal + 60}
-
-Payment Method: COD
-
-Delivery Address:
-To be provided
-
-Please confirm and arrange delivery. Thank you!`);
-
   return (
     <motion.div
       className="product-detail-page"
@@ -225,14 +200,6 @@ Please confirm and arrange delivery. Thank you!`);
         </div>
 
         <div className="product-detail__contact-grid">
-          <a
-            href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
-            target="_blank"
-            rel="noreferrer"
-            className="product-detail__contact product-detail__contact--whatsapp"
-          >
-            <span>◉</span> Order on WhatsApp
-          </a>
           <a href="tel:+8801570263779" className="product-detail__contact product-detail__contact--call">
             <span>☎</span> Call for Order
           </a>

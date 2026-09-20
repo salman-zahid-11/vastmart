@@ -1,3 +1,5 @@
+import { getOrderId } from './getOrderId';
+
 export function generateOrderWhatsAppMessage(order) {
   const addr = order.shippingAddress;
 
@@ -7,7 +9,7 @@ export function generateOrderWhatsAppMessage(order) {
 
   const message = `🛍️ *New VastMart Order*
 
-*Order ID:* #${order._id.slice(-8).toUpperCase()}
+*Order ID:* #${getOrderId(order)}
 *Customer:* ${addr.fullName}
 *Phone:* ${addr.phone}
 *Email:* ${addr.email}
