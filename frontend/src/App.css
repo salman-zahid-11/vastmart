@@ -9,7 +9,7 @@
 
 @media (min-width: 701px) {
   :root {
-    --desktop-navigation-height: 152px;
+    --desktop-navigation-height: 166px;
   }
 
   .desktop-sticky-navigation {
@@ -18,7 +18,9 @@
     left: 0;
     right: 0;
     z-index: 1000;
-    background: var(--color-canvas-raised);
+    background: rgba(250, 248, 244, 0.82);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     box-shadow: 0 3px 14px rgba(24, 19, 48, 0.08);
   }
 
