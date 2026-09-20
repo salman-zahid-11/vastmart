@@ -9,27 +9,52 @@ import { generateOrderWhatsAppMessage } from '../utils/generateWhatsAppMessage';
 
 function LocationPicker({ prefix, address, onChange }) {
   const [districtSearch, setDistrictSearch] = useState('');
-  const [thanaSearch, setThanaSearch] = useState('');
   const visibleDistricts = districts.filter((district) => district.toLowerCase().includes(districtSearch.toLowerCase()));
-  const thanas = locationData[address.city] || [];
-  const visibleThanas = thanas.filter((thana) => thana.toLowerCase().includes(thanaSearch.toLowerCase()));
+  const locationOptions = locationData[address.city] || [];
 
   return (
     <div className="checkout-location-picker">
       <div className="checkout-form__field">
+        <label htmlFor={`${prefix}-district`}>District <span>*</span></label>
         <input value={districtSearch} onChange={(e) => setDistrictSearch(e.target.value)} placeholder="Search district..." aria-label={`${prefix} search district`} />
-        <select name={`${prefix}District`} value={address.city} onChange={(e) => onChange({ city: e.target.value, thana: '' })} required aria-label={`${prefix} district`}>
+        <select id={`${prefix}-district`} name={`${prefix}District`} value={address.city} onChange={(e) => onChange({ city: e.target.value, thana: '', upazila: '' })} required>
           <option value="">Select district *</option>
           {visibleDistricts.map((district) => <option key={district} value={district}>{district}</option>)}
         </select>
       </div>
       <div className="checkout-form__field">
-        <input value={thanaSearch} onChange={(e) => setThanaSearch(e.target.value)} placeholder="Search thana / upazila..." disabled={!address.city} aria-label={`${prefix} search thana`} />
-        <select name={`${prefix}Thana`} value={address.thana} onChange={(e) => onChange({ thana: e.target.value })} required disabled={!address.city} aria-label={`${prefix} thana`}>
-          <option value="">{address.city ? 'Select thana / upazila *' : 'Select district first'}</option>
-          {visibleThanas.map((thana) => <option key={thana} value={thana}>{thana}</option>)}
+        <label htmlFor={`${prefix}-thana`}>Thana <small>(optional if upazila is selected)</small></label>
+        <select id={`${prefix}-thana`} name={`${prefix}Thana`} value={address.thana || ''} onChange={(e) => onChange({ thana: e.target.value })} disabled={!address.city}>
+          <option value="">{address.city ? 'Select thana (optional)' : 'Select district first'}</option>
+          {locationOptions.map((location) => <option key={`thana-${location}`} value={location}>{location}</option>)}
         </select>
       </div>
+      <div className="checkout-form__field">
+        <label htmlFor={`${prefix}-upazila`}>Upazila <small>(optional if thana is selected)</small></label>
+        <select id={`${prefix}-upazila`} name={`${prefix}Upazila`} value={address.upazila || ''} onChange={(e) => onChange({ upazila: e.target.value })} disabled={!address.city}>
+          <option value="">{address.city ? 'Select upazila (optional)' : 'Select district first'}</option>
+          {locationOptions.map((location) => <option key={`upazila-${location}`} value={location}>{location}</option>)}
+        </select>
+      </div>
+      <p className="checkout-location-picker__hint">Select either thana or upazila. Only one is required.</p>
+    </div>
+  );
+}
+
+function AddressPreview({ address }) {
+  const parts = [
+    address.street,
+    address.thana || address.upazila,
+    address.thana && address.upazila ? address.upazila : '',
+    address.city,
+    address.postalCode,
+    address.country,
+  ].filter(Boolean);
+
+  return (
+    <div className="checkout-form__billing-preview">
+      <strong>Full address preview</strong>
+      <span>{parts.length ? parts.join(', ') : 'Complete the address fields to preview it here.'}</span>
     </div>
   );
 }
@@ -45,13 +70,14 @@ function Checkout() {
     street: '',
     city: '',
     thana: '',
+    upazila: '',
     postalCode: '',
     country: 'Bangladesh',
     phone: '',
     alternatePhone: '',
     deliveryNotes: '',
   });
-  const [billingAddress, setBillingAddress] = useState({ city: '', thana: '', street: '', postalCode: '', country: 'Bangladesh' });
+  const [billingAddress, setBillingAddress] = useState({ city: '', thana: '', upazila: '', street: '', postalCode: '', country: 'Bangladesh' });
   const [billingSameAsShipping, setBillingSameAsShipping] = useState(true);
 
   const [paymentMethod, setPaymentMethod] = useState('cod');
@@ -103,10 +129,10 @@ function Checkout() {
     && formData.phone.trim()
     && formData.street.trim()
     && formData.city
-    && formData.thana
+    && (formData.thana || formData.upazila)
     && formData.country.trim()
     && (billingSameAsShipping
-      || (billingAddress.street.trim() && billingAddress.city && billingAddress.thana && billingAddress.country.trim())),
+      || (billingAddress.street.trim() && billingAddress.city && (billingAddress.thana || billingAddress.upazila) && billingAddress.country.trim())),
   );
 
   const handleSubmit = async (e, channel = 'checkout') => {
@@ -179,11 +205,11 @@ function Checkout() {
             <div className="checkout-form__field">
               <input type="email" name="email" value={formData.email} onChange={handleChange} required placeholder="example@gmail.com (Optional)" aria-label="Email address" />
             </div>
-            <div className="checkout-form__field">
-              <label className="checkout-form__address-label">Your Address</label>
-              <input type="text" name="street" value={formData.street} onChange={handleChange} required placeholder="House no. / building / street / area *" />
-            </div>
             <LocationPicker prefix="shipping" address={formData} onChange={(changes) => setFormData((current) => ({ ...current, ...changes }))} />
+            <div className="checkout-form__field">
+              <label className="checkout-form__address-label">House and street details</label>
+              <input type="text" name="street" value={formData.street} onChange={handleChange} required placeholder="House / building / street / area *" />
+            </div>
             <div className="checkout-form__row">
               <div className="checkout-form__field">
                 <input type="text" name="country" value={formData.country} onChange={handleChange} required placeholder="Country" />
@@ -192,6 +218,7 @@ function Checkout() {
                 <input type="text" name="postalCode" value={formData.postalCode} onChange={handleChange} placeholder="Postal code (optional)" />
               </div>
             </div>
+            <AddressPreview address={formData} />
             <div className="checkout-form__field">
               <textarea name="deliveryNotes" value={formData.deliveryNotes} onChange={handleChange} placeholder="Special notes (optional)" rows="3" />
             </div>
@@ -205,12 +232,16 @@ function Checkout() {
             </label>
             {!billingSameAsShipping && (
               <>
-                <input className="checkout-billing-input" value={billingAddress.street} onChange={(e) => updateBilling({ street: e.target.value })} placeholder="Billing house / street address *" required />
                 <LocationPicker prefix="billing" address={billingAddress} onChange={updateBilling} />
+                <div className="checkout-form__field">
+                  <label className="checkout-form__address-label">House and street details</label>
+                  <input className="checkout-billing-input" value={billingAddress.street} onChange={(e) => updateBilling({ street: e.target.value })} placeholder="House / building / street / area *" required />
+                </div>
                 <div className="checkout-form__row">
                   <input className="checkout-billing-input" value={billingAddress.country} onChange={(e) => updateBilling({ country: e.target.value })} placeholder="Country" required />
                   <input className="checkout-billing-input" value={billingAddress.postalCode} onChange={(e) => updateBilling({ postalCode: e.target.value })} placeholder="Postal code (optional)" />
                 </div>
+                <AddressPreview address={billingAddress} />
               </>
             )}
           </section>

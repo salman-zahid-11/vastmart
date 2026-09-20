@@ -74,6 +74,16 @@
   margin-bottom: 6px;
 }
 
+.checkout-form__field label span {
+  color: var(--color-danger);
+}
+
+.checkout-form__field label small {
+  color: var(--color-ink-faint);
+  font-size: 10px;
+  font-weight: 400;
+}
+
 .checkout-form__field input,
 .checkout-form__field select,
 .checkout-form__field textarea {
@@ -121,6 +131,18 @@
   font-size: 12px;
 }
 
+.checkout-form__billing-preview strong,
+.checkout-form__billing-preview span {
+  display: block;
+}
+
+.checkout-form__billing-preview strong {
+  margin-bottom: 4px;
+  color: var(--color-ink);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
 .checkout-form__field input:focus {
   border-color: var(--color-primary);
   outline: none;
@@ -135,13 +157,16 @@
 
 .checkout-location-picker {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-md);
+  margin-bottom: var(--space-md);
 }
 
 .checkout-location-picker .checkout-form__field {
   display: grid;
   gap: 6px;
+  align-content: start;
+  margin-bottom: 0;
 }
 
 .checkout-location-picker .checkout-form__field input {
@@ -150,8 +175,11 @@
   background: #f8fafc;
 }
 
-.checkout-location-picker .checkout-form__field select {
-  grid-row: 2;
+.checkout-location-picker__hint {
+  grid-column: 1 / -1;
+  margin: -6px 0 0;
+  color: var(--color-ink-faint);
+  font-size: 11px;
 }
 
 .checkout-form__same-address {

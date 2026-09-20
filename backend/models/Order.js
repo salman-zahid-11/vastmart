@@ -39,7 +39,8 @@ const orderSchema = new mongoose.Schema(
       label: String,
       street: { type: String, required: true },
       city: { type: String, required: true },
-      thana: { type: String, required: true },
+      thana: String,
+      upazila: String,
       postalCode: String,
       country: { type: String, required: true },
       phone: { type: String, required: true },
@@ -49,6 +50,7 @@ const orderSchema = new mongoose.Schema(
     billingAddress: {
       city: String,
       thana: String,
+      upazila: String,
       street: String,
       postalCode: String,
       country: String,

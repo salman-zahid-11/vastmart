@@ -24,7 +24,7 @@ ${itemLines}
 *Payment Method:* ${order.paymentMethod.replace('_', ' ').toUpperCase()}
 
 *Delivery Address:*
-${addr.street}, ${addr.city}${addr.postalCode ? ', ' + addr.postalCode : ''}
+${addr.street}, ${addr.thana || addr.upazila}${addr.thana && addr.upazila ? ', ' + addr.upazila : ''}, ${addr.city}${addr.postalCode ? ', ' + addr.postalCode : ''}
 ${addr.country}
 ${addr.deliveryNotes ? `\n*Note:* ${addr.deliveryNotes}` : ''}
 
